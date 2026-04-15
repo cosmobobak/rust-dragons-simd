@@ -33,14 +33,21 @@
 
 For a long time, computers got faster by increasing clock
 frequency – executing more instructions in the same amount of time.
-#footnote[This is called #link("https://en.wikipedia.org/wiki/Dennard_scaling")[Dennard scaling].]
 
-Around 2006, processors could not be made smaller without melting,
-and so now we have to use *parallelism* if we wish to make our programs faster.
+This was achievable in virtue of #link("https://en.wikipedia.org/wiki/Dennard_scaling")[Dennard scaling],
+a _scaling law_ stating that shrinking transistors does not affect their power density#footnote[That is, power per
+  unit area.], allowing components of equal transistor count to be run at lower power and higher frequency.
+
+Around 2006, Dennard scaling broke down – shrinking transistors no longer reduced their
+power consumption proportionally.
 
 ---
 
-#image("assets/cpu-clock-core-count-wikipedia.png")
+// #image("assets/cpu-clock-core-count-wikipedia.png")
+
+---
+
+To keep making programs faster, we now have to exploit *parallelism*.
 
 ---
 
@@ -58,7 +65,7 @@ common applications
 unsafe to_int for autovec
 lizard screlu
 general coding style (operate on batches)
- → cite casey, matklad.
+→ cite casey, matklad.
 
 
 
