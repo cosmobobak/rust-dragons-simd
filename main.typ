@@ -6,6 +6,9 @@
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
   footer: self => self.info.institution,
+  config-colors(
+    primary: black,
+  ),
   config-info(
     title: [Introduction to SIMD in Rust],
     subtitle: [Using more of your hardware for fun & profit],
@@ -17,7 +20,12 @@
   ),
 )
 
-#show link: underline
+#set text(font: "EB Garamond", weight: "light", size: 20pt)
+// #show math.equation: set text(font: "Fira Math")
+#set strong(delta: 175)
+#set par(justify: true)
+
+#show link: smallcaps
 
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 
@@ -43,7 +51,14 @@ power consumption proportionally.
 
 ---
 
-// #image("assets/cpu-clock-core-count-wikipedia.png")
+#figure(
+  image("microprocessor-trend-data/50yrs/50-years-processor-trend.png", width: 85%),
+  numbering: none,
+  caption: [
+    Original data up to the year 2010 collected and plotted by M. Horowitz, F. Labonte, O. Shacham, K. Olukotun, L. Hammond, and C. Batten.
+    New plot and data collected for 2010-2021 by K. Rupp.
+  ],
+) <scaling>
 
 ---
 
