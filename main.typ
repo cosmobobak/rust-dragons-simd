@@ -21,6 +21,7 @@
 )
 
 #set text(font: "EB Garamond", weight: "light", size: 20pt)
+#show raw: set text(font: "TX-02")
 
 #set strong(delta: 175)
 #set par(justify: true)
@@ -39,8 +40,10 @@
 
 ---
 
-“SIMD”, or #smallcaps[single-instruction multiple data], is a programming paradigm
-in which a single stream of instructions is applied to multiple streams of data#footnote[https://en.wikipedia.org/wiki/Flynn's_taxonomy].
+#smallcaps[Single instruction, multiple data] describes#footnote[
+  #link("https://en.wikipedia.org/wiki/Flynn's_taxonomy")[Wikipedia / Flynn’s taxonomy]]
+computers in which a single stream of instructions is applied
+to multiple streams of data.
 
 This is distinguished from:
 
@@ -50,7 +53,7 @@ This is distinguished from:
 
 ---
 
-In typical conversation, “SIMD” refers specifically to a class of CPU instructions
+Colloquially, “SIMD” refers specifically to a class of CPU instructions
 that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
 #smallcaps[lanes].
 
@@ -60,6 +63,41 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
   image("assets/registers.svg", width: 60%),
   numbering: none,
 ) <registers>
+
+---
+
+#smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
+
+#alternatives(stretch: true, position: left + top)[
+  
+][
+  ```rust
+  // core::arch::x86_64::
+  pub fn _mm_add_epi32(a: m128i, b: m128i) → m128i
+  // core::arch::aarch64::
+  pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
+  // general form:
+  pub fn simd_add_i32(a: i32×N, b: i32×N) → i32×N
+  ```
+
+  #quote[Add packed 32-bit integers in `a` and `b`.]
+
+  Here, `N` is equal to the size of the hardware vector divided
+  by the size of data-type – so for#linebreak() `i32`s on AVX2 hardware,
+  it’s 256 / 32 = 8 integers per vector operation.
+][
+  ```rust
+  let x: [i32; 4] = [1, 2, 3, 4];
+  let y: [i32; 4] = [5, 6, 7, 8];
+  let z: [i32; 4] = unsafe {
+      let x_vec: __m128i = transmute(x);
+      let y_vec: __m128i = transmute(y);
+      let z_vec: __m128i = _mm_add_epi32(x_vec, y_vec);
+      transmute(z_vec)
+  };
+  println!("{:?}", z); // → [6, 8, 10, 12]
+  ```
+]
 
 ---
 
