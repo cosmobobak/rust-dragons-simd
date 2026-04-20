@@ -53,6 +53,8 @@ This is distinguished from:
 
 ---
 
+== What do people mean when they say “SIMD”?
+
 Colloquially, “SIMD” refers specifically to a class of CPU instructions
 that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
 #smallcaps[lanes].
@@ -65,6 +67,8 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 ) <registers>
 
 ---
+
+== What does SIMD look like?
 
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
@@ -128,19 +132,29 @@ power consumption proportionally.
 
 ---
 
-To keep making programs faster, we now have to exploit *parallelism*.
+#figure(
+  image("microprocessor-trend-data/50yrs/50-years-processor-trend-fits.png", width: 85%),
+  numbering: none,
+  caption: [
+    Original data up to the year 2010 collected and plotted by M. Horowitz, F. Labonte, O. Shacham, K. Olukotun, L. Hammond, and C. Batten.
+    New plot and data collected for 2010-2021 by K. Rupp.
+  ],
+) <scaling-annotated>
 
 ---
 
-There are a number of ways to achieve greater parallelism.
-
-1. Execute multiple instruction-streams at the same time – “Multi-core”
-2. Execute multiple instructions concurrently – “Out-of-order execution”
-3. Execute each instruction on multiple pieces of data – “SIMD” – the subject of this talk.
+To keep making programs faster, we now have to exploit *parallelism*, #linebreak()
+and SIMD is an excellent place to start.
 
 ---
 
-= You are already using some SIMD
+= Using SIMD
+
+---
+
+
+
+---
 
 = Motivating example
 
