@@ -25,7 +25,7 @@
 #set strong(delta: 175)
 #set par(justify: true)
 
-#show link: smallcaps
+#show link: underline
 
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 
@@ -39,8 +39,8 @@
 
 ---
 
-“SIMD”, or #smallcaps[Single-instruction multiple data], is a programming paradigm
-in which one stream of instructions is applied to multiple streams of data.
+“SIMD”, or #smallcaps[single-instruction multiple data], is a programming paradigm
+in which a single stream of instructions is applied to multiple streams of data#footnote[https://en.wikipedia.org/wiki/Flynn's_taxonomy].
 
 This is distinguished from:
 
@@ -70,9 +70,9 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 For a long time, computers got faster by increasing clock
 frequency – executing more instructions in the same amount of time.
 
-This was achievable in virtue of #link("https://en.wikipedia.org/wiki/Dennard_scaling")[Dennard scaling] –
-the fact that shrinking transistors did not affect their power density#footnote[That is, power per
-  unit area.], allowing components to be run at lower power and higher frequency.
+This was achievable in virtue of #smallcaps[Dennard scaling] – the fact that shrinking
+transistors did not affect their power density#footnote[That is, power per unit area.],
+allowing components to run at lower power and higher frequency.
 
 Around 2006, Dennard scaling broke down – shrinking transistors no longer reduced their
 power consumption proportionally.
