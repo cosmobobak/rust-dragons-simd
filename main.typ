@@ -21,7 +21,7 @@
 )
 
 #set text(font: "EB Garamond", weight: "light", size: 20pt)
-// #show math.equation: set text(font: "Fira Math")
+
 #set strong(delta: 175)
 #set par(justify: true)
 
@@ -35,16 +35,44 @@
 
 #outline(title: none, indent: 1em, depth: 1)
 
-= What is SIMD?
+= What’s SIMD?
+
+---
+
+“SIMD”, or #smallcaps[Single-instruction multiple data], is a programming paradigm
+in which one stream of instructions is applied to multiple streams of data.
+
+This is distinguished from:
+
+- SISD – “Normal programming”.
+- MISD – Most typically fault-tolerant computing, e.g. the Space Shuttle flight computer.
+- MIMD – Multi-core systems.
+
+---
+
+In typical conversation, “SIMD” refers specifically to a class of CPU instructions
+that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
+#smallcaps[lanes].
+
+These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU registers.
+
+#figure(
+  image("assets/registers.svg", width: 60%),
+  numbering: none,
+) <registers>
+
+---
+
+= Why do we want SIMD?
 
 ---
 
 For a long time, computers got faster by increasing clock
 frequency – executing more instructions in the same amount of time.
 
-This was achievable in virtue of #link("https://en.wikipedia.org/wiki/Dennard_scaling")[Dennard scaling],
-a _scaling law_ stating that shrinking transistors does not affect their power density#footnote[That is, power per
-  unit area.], allowing components of equal transistor count to be run at lower power and higher frequency.
+This was achievable in virtue of #link("https://en.wikipedia.org/wiki/Dennard_scaling")[Dennard scaling] –
+the fact that shrinking transistors did not affect their power density#footnote[That is, power per
+  unit area.], allowing components to be run at lower power and higher frequency.
 
 Around 2006, Dennard scaling broke down – shrinking transistors no longer reduced their
 power consumption proportionally.
@@ -74,23 +102,21 @@ There are a number of ways to achieve greater parallelism.
 
 ---
 
-= TODO
+= You are already using some SIMD
 
-common applications
-unsafe to_int for autovec
-lizard screlu
-general coding style (operate on batches)
-→ cite casey, matklad.
+= Motivating example
 
+= A more complex example
 
+= Advice for the programmer
 
+= Appendix
 
-
-
-
-
-
-
+- common applications
+- unsafe to_int for autovec
+- lizard screlu
+- general coding style (operate on batches)
+- → cite casey, matklad.
 
 
 
