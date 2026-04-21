@@ -19,7 +19,7 @@
     // logo: emoji.city,
   ),
   config-common(
-    show-notes-on-second-screen: right,
+    // show-notes-on-second-screen: right,
   ),
 )
 
@@ -163,19 +163,98 @@ and SIMD is an excellent place to start.
 
 ---
 
+todo!()
 
+== Autovectorisation
 
----
+#smallcaps[Autovectorisation] is the procedure by which your compiler may write SIMD
+on your behalf.
 
-= Motivating example
+#pause
 
-= A more complex example
+#set rect(
+  inset: 8pt,
+  width: 100%,
+  stroke: none,
+)
 
-= Advice for the programmer
+#grid(
+  columns: (27fr, 1fr, 3fr, 50fr),
+  rows: auto,
+  rect[
+    ```rust
+    fn add_arrays(
+      a :     &[i32; 1024],
+      b :     &[i32; 1024],
+      c : &mut [i32; 1024],
+    ) {
+      for ((a, b), c) in a
+          .iter()
+          .zip(b)
+          .zip(c) {
+        *c = *a + *b;
+      }
+    }
+    ```
+  ],
+  rect[→],
+  rect[],
+  rect[
+    ```asm
+    add_arrays:
+      xor     eax, eax
+    .loop:
+      ; SIMD load of b[i]
+      vmovdqu ymm0, ymmword ptr [rsi + 4*rax]
+      ; SIMD add + load of a[i]
+      vpaddd  ymm0, ymm0, ymmword ptr [rdi + 4*rax]
+      ; SIMD store to c[i]
+      vmovdqu ymmword ptr [rdx + 4*rax], ymm0
+      ; step loop by 8
+      add     rax, 8
+      cmp     rax, 1024
+      jne     .loop
+      vzeroupper
+      ret
+    ```
+  ],
+)
 
-- common applications
-- unsafe to_int for autovec
+== Making code autovec-friendly
+
+some code will fail to vectorise (example)
+
+(e.g. to_int, bounds checks, &c)
+
+contrast preämbles of
+
+```rust
+fn stencil(input: &[i32], output: &mut [i32], n: usize) {
+    for i in 0..n {
+        output[i] = input[i] + input[i + 1] + input[i + 2];
+    }
+}
+
+fn stencil2(input: &[i32], output: &mut [i32], n: usize) {
+    assert!(n + 2 <= input.len() && n <= output.len());
+    for i in 0..n {
+        output[i] = input[i] + input[i + 1] + input[i + 2];
+    }
+}
+```
+
+https://godbolt.org/z/57ezre9jd
+
+== Intrinsics
+
 - lizard screlu
+
+= Finding a byte in a buffer
+
+= GFNI
+
+= Advice for the working programmer
+
 - general coding style (operate on batches)
 - → cite casey, matklad.
 
