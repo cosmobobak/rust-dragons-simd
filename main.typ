@@ -18,6 +18,9 @@
     // contact: [cosmobobak\@gmail.com],
     // logo: emoji.city,
   ),
+  config-common(
+    show-notes-on-second-screen: right,
+  ),
 )
 
 #set text(font: "EB Garamond", weight: "light", size: 20pt)
@@ -33,6 +36,14 @@
 #title-slide()
 
 = Outline <touying:hidden>
+
+#speaker-note[
+  I’m going to tell you
+  - what SIMD is
+  - why you should care that it exists
+  - how to use it
+  - how that should change how you write code.
+]
 
 #outline(title: none, indent: 1em, depth: 1)
 
@@ -73,7 +84,7 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
 #alternatives(stretch: true, position: left + top)[
-  
+
 ][
   ```rust
   // core::arch::x86_64::
@@ -162,49 +173,19 @@ and SIMD is an excellent place to start.
 
 = Advice for the programmer
 
-= Appendix
-
 - common applications
 - unsafe to_int for autovec
 - lizard screlu
 - general coding style (operate on batches)
 - → cite casey, matklad.
 
+// A slide with equation:
 
+// $ x_(n+1) = (x_n + a/x_n) / 2 $
 
-
-
-
-
-
-== A long long long long long long long long long long long long long long long long long long long long long long long long Title
-
-=== sdfsdf
-
-A slide with equation:
-
-$ x_(n+1) = (x_n + a/x_n) / 2 $
-
-#lorem(200)
-
-= Second Section
-
-#focus-slide[
-  Wake up!
-]
-
-== Simple Animation
-
-We can use `#pause` to #pause display something later.
-
-#meanwhile
-
-Meanwhile, #pause we can also use `#meanwhile` to display other content synchronously.
-
-#speaker-note[
-  + This is a speaker note.
-  + You won't see it unless you use `config-common(show-notes-on-second-screen: right)`
-]
+// #focus-slide[
+//   Wake up!
+// ]
 
 #show: appendix
 
@@ -212,4 +193,4 @@ Meanwhile, #pause we can also use `#meanwhile` to display other content synchron
 
 ---
 
-Please pay attention to the current slide number.
+
