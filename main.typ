@@ -10,7 +10,7 @@
     primary: black,
   ),
   config-info(
-    title: [Introduction to SIMD in Rust],
+    title: [Introduction to #smallcaps[simd] in Rust],
     subtitle: [Using more of your hardware for fun & profit],
     author: [Cosmo Bobak],
     date: datetime(year: 2026, month: 04, day: 22),
@@ -39,7 +39,7 @@
 
 #speaker-note[
   I’m going to tell you
-  - what SIMD is
+  - what #smallcaps[simd] is
   - why you should care that it exists
   - how to use it
   - how that should change how you write code.
@@ -47,7 +47,7 @@
 
 #outline(title: none, indent: 1em, depth: 1)
 
-= What’s SIMD?
+= What’s #smallcaps[simd]?
 
 ---
 
@@ -58,15 +58,15 @@ to multiple streams of data.
 
 This is distinguished from:
 
-- SISD – “Normal programming”.
-- MISD – Most typically fault-tolerant computing, e.g. the Space Shuttle flight computer.
-- MIMD – Multi-core systems.
+#smallcaps[sisd] – “Normal programming”.#linebreak()
+#smallcaps[misd] – Most typically fault-tolerant computing, e.g. the Space Shuttle flight computer.#linebreak()
+#smallcaps[mimd] – Multi-core systems.
 
 ---
 
-== What do people mean when they say “SIMD”?
+== What do people mean when they say “#smallcaps[simd]”?
 
-Colloquially, “SIMD” refers specifically to a class of CPU instructions
+Colloquially, #smallcaps[simd] refers specifically to a class of CPU instructions
 that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
 #smallcaps[lanes].
 
@@ -79,7 +79,7 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 
 ---
 
-== What does SIMD look like?
+== What does #smallcaps[simd] look like?
 
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
@@ -116,7 +116,7 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 
 ---
 
-= Why do we want SIMD?
+= Why do we want #smallcaps[simd]?
 
 ---
 
@@ -155,11 +155,11 @@ power consumption proportionally.
 ---
 
 To keep making programs faster, we now have to exploit *parallelism*, #linebreak()
-and SIMD is an excellent place to start.
+and #smallcaps[simd] is an excellent place to start.
 
 ---
 
-= Using SIMD
+= Using #smallcaps[simd]
 
 ---
 
@@ -167,7 +167,7 @@ todo!()
 
 == Autovectorisation
 
-#smallcaps[Autovectorisation] is the procedure by which your compiler may write SIMD
+#smallcaps[Autovectorisation] is the procedure by which your compiler may write #smallcaps[simd]
 on your behalf.
 
 #pause
