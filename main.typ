@@ -12,7 +12,7 @@
     primary: black,
   ),
   config-info(
-    title: [Introduction to #smallcaps[simd] in Rust],
+    title: [Introduction to SIMD in Rust],
     subtitle: [Using more of your hardware for fun & profit],
     author: [Cosmo Bobak],
     date: datetime(year: 2026, month: 04, day: 22),
@@ -33,7 +33,11 @@
 
 #show link: underline
 
-#set heading(numbering: numbly("{1}.", default: "1.1"))
+#set heading(numbering: numbly("{1}", default: "1.1"))
+
+#show footnote.entry: set text(rgb(35, 55, 59))
+// #show par: set text(number-type: "old-style")
+// #show figure.caption: set text(number-type: "old-style")
 
 #title-slide()
 
@@ -49,7 +53,7 @@
 
 #outline(title: none, indent: 1em, depth: 1)
 
-= What’s #smallcaps[simd]?
+= What’s SIMD?
 
 ---
 
@@ -68,7 +72,7 @@ This is distinguished from:
 
 ---
 
-== What do people mean when they say “#smallcaps[simd]”?
+== What do people mean when they say “SIMD”?
 
 Colloquially, #smallcaps[simd] refers specifically to a class of CPU instructions
 that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
@@ -83,7 +87,7 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 
 ---
 
-== What does #smallcaps[simd] look like?
+== What does SIMD look like?
 
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
@@ -127,19 +131,18 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 
 ---
 
-= Why do we want #smallcaps[simd]?
+= Why should you care?
 
 ---
 
-For a long time, computers got faster by increasing clock
-frequency – executing more instructions in the same amount of time.
+For a long time, computers became faster by increasing clock frequency,
+thereby executing more instructions in the same time.
 
-This was achievable in virtue of #smallcaps[Dennard scaling] – the fact that shrinking
-transistors did not affect their power density#footnote[That is, power per unit area.],
-allowing components to run at lower power and higher frequency.
+This was achievable in virtue of #smallcaps[dennard scaling] – the observation that shrinking transistors did not affect their power density#footnote[That is, power
+  per unit area.], allowing components to run at lower power and higher frequency.
 
-Around 2006, Dennard scaling broke down – shrinking transistors no longer reduced their
-power consumption proportionally.
+Around #text(number-type: "old-style")[2006], Dennard scaling broke down, and shrinking
+transistors no longer reduced their power consumption proportionally.
 
 ---
 
@@ -151,9 +154,10 @@ power consumption proportionally.
   ],
   numbering: none,
   caption: text(size: .8em)[
-    Original data up to the year 2010 collected and plotted by M. Horowitz,
-    F. Labonte, O. Shacham, K. Olukotun, L. Hammond, and C. Batten.
-    New plot and data collected for 2010-2021 by K. Rupp.
+    Original data up to the year #text(number-type: "old-style")[2010] collected
+    and plotted by M. Horowitz, F. Labonte, O. Shacham, K. Olukotun, L. Hammond,
+    and C. Batten.
+    New plot and data collected for #text(number-type: "old-style")[2010-2021] by K. Rupp.
     Trendlines fit via log-linear regression.],
 ) <end-of-dennard-scaling>
 
@@ -164,7 +168,7 @@ and #smallcaps[simd] is an excellent place to start.
 
 ---
 
-= Using #smallcaps[simd]
+= Using SIMD in your programs
 
 ---
 
