@@ -39,6 +39,8 @@
 // #show par: set text(number-type: "old-style")
 // #show figure.caption: set text(number-type: "old-style")
 
+#set quote(block: true)
+
 #title-slide()
 
 = Outline <touying:hidden>
@@ -92,14 +94,6 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
 #alternatives(stretch: true, position: left + horizon)[
-
-  #figure(
-    image("assets/simd-add.svg", width: 80%),
-    numbering: none,
-  ) <registers>
-
-][
-
   ```rust
   // core::arch::x86_64::
   pub fn _mm_add_epi32(a: m128i, b: m128i) → m128i
@@ -112,21 +106,20 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
   Here, `N` is equal to the size of the hardware vector divided
   by the size of data-type – so for `i32`s on#linebreak() AVX2 hardware,
   it’s 256 / 32 = 8 integers per vector operation.
-
-][
-
+][ // ------------------------------------------
+  #figure(
+    image("assets/simd-add.svg", width: 80%),
+    numbering: none,
+  ) <registers>
+][ // ------------------------------------------
   ```rust
   let x: [i32; 4] = [1, 2, 3, 4];
   let y: [i32; 4] = [5, 6, 7, 8];
-  let z: [i32; 4] = unsafe {
-      let x_vec: __m128i = transmute(x);
-      let y_vec: __m128i = transmute(y);
-      let z_vec: __m128i = _mm_add_epi32(x_vec, y_vec);
-      transmute(z_vec)
-  };
+  let z: [i32; 4] = unsafe { _mm_add_epi32(x, y) };
   println!("{:?}", z); // → [6, 8, 10, 12]
   ```
 
+  (calls to `std::mem::transmute` omitted for clarity)
 ]
 
 ---
@@ -176,8 +169,8 @@ todo!()
 
 == Autovectorisation
 
-#smallcaps[Autovectorisation] is the procedure by which your compiler may write #smallcaps[simd]
-on your behalf.
+#smallcaps[Autovectorisation] is the procedure by which your compiler may write
+#smallcaps[simd] on your behalf.
 
 #pause
 
@@ -229,30 +222,91 @@ on your behalf.
   ],
 )
 
-== Making code autovec-friendly [UNDER CONSTRUCTION]
+== Making code autovec-friendly
 
-some code will fail to vectorise (example)
+The compiler cannot always perform #smallcaps[autovectorisation], or might merely
+produce very suboptimal vectorised code.
 
-(e.g. to_int, bounds checks, &c)
+#alternatives(stretch: true, position: left + horizon)[][
+  Take float-to-integer conversion:
 
-contrast preämbles of
+  ```rust
+  pub fn saturating(xs: &[f32], out: &mut [i32]) {
+      for (x, o) in xs.iter().zip(out) {
+          *o = *x as i32;
+      }
+  }
+  ```
+]
+
+---
+
+#text(size: 40pt)[→ `CVTTPS2DQ`]
+#linebreak()
+_Convert With Truncation Packed Single Precision Floating-Point Values to PackedSigned Doubleword Integer Values_
+
+#quote(attribution: link(
+  "https://www.felixcloutier.com/x86/cvttps2dq",
+)[www.felixcloutier.com/x86/cvttps2dq])[
+  Converts … sixteen packed single precision floating-point values
+  #linebreak()
+  in the source operand to … sixteen signed doubleword integers in
+  #linebreak()
+  the destination operand.
+
+  If a converted result is larger than the maximum signed doubleword integer,
+  #linebreak()
+  the floating-point invalid exception is raised, and if this exception is masked,
+  #linebreak()
+  the indefinite integer value (0×80000000) is returned.
+]
+
+---
+
+Unfortunately, Rust’s cast semantics are *too correct* for us!
+
+#alternatives(stretch: true, position: left + horizon)[][
+  #quote(attribution: "The Rust Reference [expr.as.numeric.int-as-float]")[
+    Casting from a float to an integer will round the float towards zero.
+    - `NaN` will return `0`
+    - Values larger than the maximum integer value, including `INFINITY`,
+      #linebreak()
+      will saturate to the maximum value of the integer type.
+    - Values smaller than the minimum integer value, including `NEG_INFINITY`,
+      #linebreak()
+      will saturate to the minimum value of the integer type.
+  ]
+][
+  ```asm
+  vmovss     xmm2, [rdi + rbx + 4] ; load one f32
+  vcvttss2si ebp , xmm2            ; scalar f32→i32 (0×80000000 on overflow/NaN)
+  vucomiss   xmm2, xmm0            ; xmm0 = 0×4effffff = largest f32 < 2^31
+  cmova      ebp , r11d            ; if above, ebp = INT_MAX  (+ve saturation)
+  vucomiss   xmm2, xmm2            ; self-compare: unordered ⇔ NaN, sets PF
+  cmovp      ebp , r8d             ; if NaN, ebp = 0           (NaN → 0)
+  vpinsrd    xmm1, xmm1, ebp, 1    ; insert scalar result into lane 1 of an xmm
+  ```
+
+  Instead of converting eight floats using two instructions, we convert *one* float
+  with *seven*!
+
+  Naïvely speaking, 28× worse than we’d hoped.
+]
+
+---
+
+How do we show the compiler what we want?
+
+#pause
 
 ```rust
-fn stencil(input: &[i32], output: &mut [i32], n: usize) {
-    for i in 0..n {
-        output[i] = input[i] + input[i + 1] + input[i + 2];
-    }
-}
-
-fn stencil2(input: &[i32], output: &mut [i32], n: usize) {
-    assert!(n + 2 <= input.len() && n <= output.len());
-    for i in 0..n {
-        output[i] = input[i] + input[i + 1] + input[i + 2];
+pub fn saturating(xs: &[f32], out: &mut [i32]) {
+    for (x, o) in xs.iter().zip(out) {
+        // *o = *x as i32;
+        *o = unsafe { x.to_int_unchecked() };
     }
 }
 ```
-
-https://godbolt.org/z/57ezre9jd
 
 == Intrinsics
 
@@ -346,10 +400,7 @@ fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
 
 
 // Thoughts
-// consider adding a diagram to visualize e.g. _mm_add_epi32 to explain what it is actually going
-// Code showing calling the SIMD in use (slide 5?) maybe not helpful yet?
 // Slides 9 and 10 are great - not too much to read and your voiceover is to explain the content is excellent
 // When showing instructions, consider highlighting them as you mention them? Or add an extra diagram showing it operating on the numbers?
-// Is there some clever way to use blackbox to get it to not optimize so heavily?
 // Slide 17 - consider add an exmaple number to demonstrate the clamping and squaring
 // Note: we can see you cursor but it's small
