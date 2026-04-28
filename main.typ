@@ -31,7 +31,13 @@
 #set strong(delta: 175)
 #set par(justify: true)
 
-#show link: underline
+#show link: it => {
+  if type(it.dest) == str {
+    box[#it#h(0pt)#text(fill: rgb("#a00"), baseline: -0.15em)[°]]
+  } else {
+    it
+  }
+}
 
 #set heading(numbering: numbly("{1}", default: "1.1"))
 
@@ -39,7 +45,7 @@
 // #show par: set text(number-type: "old-style")
 // #show figure.caption: set text(number-type: "old-style")
 
-#set quote(block: true)
+#set quote(block: true, quotes: true)
 
 #title-slide()
 
@@ -91,36 +97,45 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 
 == What does SIMD look like?
 
+#smallcaps[simd intrinsics] are built-in functions that will translate
+to a particular #smallcaps[simd instruction].
+
+```rust
+// core::arch::x86_64::
+pub fn _mm_add_epi32(a: m128i, b: m128i) → m128i
+// core::arch::aarch64::
+pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
+```
+
+#quote(
+  attribution: link(
+    "https://doc.rust-lang.org/beta/core/arch/x86_64/fn._mm_add_epi32.html",
+  )[doc.rust-lang.org/core/arch/x86_64/fn.\_mm\_add\_epi32],
+)[
+  Adds packed 32-bit integers in `a` and `b`.
+]
+
+// Here, `N` is equal to the size of the hardware vector divided
+// by the size of data-type – so for `i32`s on#linebreak() AVX2 hardware,
+// it’s 256 / 32 = 8 integers per vector operation.
+
+---
+
 #smallcaps[simd instructions] allow us to operate on each lane of a vector uniformly & simultaneously.
 
-#alternatives(stretch: true, position: left + horizon)[
-  ```rust
-  // core::arch::x86_64::
-  pub fn _mm_add_epi32(a: m128i, b: m128i) → m128i
-  // core::arch::aarch64::
-  pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
-  ```
+#figure(
+  image("assets/simd-add.svg", width: 80%),
+  numbering: none,
+) <registers>
 
-  #quote[Add packed 32-bit integers in `a` and `b`.]
-
-  Here, `N` is equal to the size of the hardware vector divided
-  by the size of data-type – so for `i32`s on#linebreak() AVX2 hardware,
-  it’s 256 / 32 = 8 integers per vector operation.
-][ // ------------------------------------------
-  #figure(
-    image("assets/simd-add.svg", width: 80%),
-    numbering: none,
-  ) <registers>
-][ // ------------------------------------------
-  ```rust
-  let x: [i32; 4] = [1, 2, 3, 4];
-  let y: [i32; 4] = [5, 6, 7, 8];
-  let z: [i32; 4] = unsafe { _mm_add_epi32(x, y) };
-  println!("{:?}", z); // → [6, 8, 10, 12]
-  ```
-
-  (calls to `std::mem::transmute` omitted for clarity)
-]
+// ---
+//
+// ```rust
+// let x: [i32; 4] = [1, 2, 3, 4];
+// let y: [i32; 4] = [5, 6, 7, 8];
+// let z: [i32; 4] = unsafe { _mm_add_epi32(x, y) };
+// println!("{:?}", z); // → [6, 8, 10, 12]
+// ```
 
 ---
 
@@ -159,87 +174,82 @@ transistors no longer reduced their power consumption proportionally.
 To keep making programs faster, we now have to exploit *parallelism*, #linebreak()
 and #smallcaps[simd] is an excellent place to start.
 
----
-
-= Using SIMD in your programs
+= Autovectorisation
 
 ---
-
-todo!()
-
-== Autovectorisation
 
 #smallcaps[Autovectorisation] is the procedure by which your compiler may write
 #smallcaps[simd] on your behalf.
 
 #pause
 
-#set rect(
-  inset: 8pt,
-  width: 100%,
-  stroke: none,
-)
+#text[
+  #set rect(
+    inset: 8pt,
+    width: 100%,
+    stroke: none,
+  )
 
-#grid(
-  columns: (27fr, 1fr, 3fr, 50fr),
-  rows: auto,
-  rect[
-    ```rust
-    fn add_arrays(
-      a :     &[i32; 1024],
-      b :     &[i32; 1024],
-      c : &mut [i32; 1024],
-    ) {
-      for ((a, b), c) in a
-          .iter()
-          .zip(b)
-          .zip(c) {
-        *c = *a + *b;
+  #grid(
+    columns: (27fr, 1fr, 3fr, 50fr),
+    rows: auto,
+    rect[
+      ```rust
+      fn add_arrays(
+        a :     &[i32; 1024],
+        b :     &[i32; 1024],
+        c : &mut [i32; 1024],
+      ) {
+        for ((a, b), c) in a
+            .iter()
+            .zip(b)
+            .zip(c) {
+          *c = *a + *b;
+        }
       }
-    }
-    ```
-  ],
-  rect[→],
-  rect[],
-  rect[
-    ```asm
-    add_arrays:
-      xor     eax, eax
-    .loop:
-      ; SIMD load of b[i]
-      vmovdqu ymm0, ymmword ptr [rsi + 4*rax]
-      ; SIMD add + load of a[i]
-      vpaddd  ymm0, ymm0, ymmword ptr [rdi + 4*rax]
-      ; SIMD store to c[i]
-      vmovdqu ymmword ptr [rdx + 4*rax], ymm0
-      ; step loop by 8
-      add     rax, 8
-      cmp     rax, 1024
-      jne     .loop
-      vzeroupper
-      ret
-    ```
-  ],
-)
-
-== Making code autovec-friendly
-
-The compiler cannot always perform #smallcaps[autovectorisation], or might merely
-produce very suboptimal vectorised code.
-
-#alternatives(stretch: true, position: left + horizon)[][
-  Take float-to-integer conversion:
-
-  ```rust
-  pub fn saturating(xs: &[f32], out: &mut [i32]) {
-      for (x, o) in xs.iter().zip(out) {
-          *o = *x as i32;
-      }
-  }
-  ```
+      ```
+    ],
+    rect[→],
+    rect[],
+    rect[
+      ```asm
+      add_arrays:
+        xor     eax, eax
+      .loop:
+        ; SIMD load of b[i]
+        vmovdqu ymm0, ymmword ptr [rsi + 4*rax]
+        ; SIMD add + load of a[i]
+        vpaddd  ymm0, ymm0, ymmword ptr [rdi + 4*rax]
+        ; SIMD store to c[i]
+        vmovdqu ymmword ptr [rdx + 4*rax], ymm0
+        ; step loop by 8
+        add     rax, 8
+        cmp     rax, 1024
+        jne     .loop
+        vzeroupper
+        ret
+      ```
+    ],
+  )
 ]
 
 ---
+
+The compiler cannot always perform #smallcaps[autovectorisation], and even when it succeeds, it may produce very suboptimal vectorised code.
+
+#pause
+
+Take float-to-integer conversion:
+
+```rust
+pub fn convert(xs: &[f32], out: &mut [i32]) {
+    for (x, o) in xs.iter().zip(out) {
+        *o = *x as i32;
+    }
+}
+```
+
+== Fast float-to-integer conversion
 
 #text(size: 40pt)[→ `CVTTPS2DQ`]
 #linebreak()
@@ -266,9 +276,10 @@ _Convert With Truncation Packed Single Precision Floating-Point Values to Packed
 Unfortunately, Rust’s cast semantics are *too correct* for us!
 
 #alternatives(stretch: true, position: left + horizon)[][
-  #quote(attribution: "The Rust Reference [expr.as.numeric.int-as-float]")[
+  #quote(attribution: "The Rust Reference [expr.as.numeric.int-as-float]", quotes: false)[
+    #set list(marker: [--])
     Casting from a float to an integer will round the float towards zero.
-    - `NaN` will return `0`
+    - NaN will return 0
     - Values larger than the maximum integer value, including `INFINITY`,
       #linebreak()
       will saturate to the maximum value of the integer type.
@@ -287,20 +298,38 @@ Unfortunately, Rust’s cast semantics are *too correct* for us!
   vpinsrd    xmm1, xmm1, ebp, 1    ; insert scalar result into lane 1 of an xmm
   ```
 
-  Instead of converting eight floats using two instructions, we convert *one* float
-  with *seven*!
+  Instead of converting eight floats using two instructions,
+  we convert one float with seven!
 
-  Naïvely speaking, 28× worse than we’d hoped.
+  Naïvely speaking, this is 28× worse than we’d hoped.
 ]
 
 ---
 
-How do we show the compiler what we want?
+How do we show the compiler what we want? Do we need to use instrinsics? #pause *No.*
 
 #pause
 
 ```rust
-pub fn saturating(xs: &[f32], out: &mut [i32]) {
+// f32::
+pub unsafe fn to_int_unchecked<Int>(self) -> Int
+where
+    f32: FloatToInt<Int>,
+```
+
+#quote(
+  attribution: link("https://doc.rust-lang.org/std/primitive.f32.html#method.to_int_unchecked")[
+    doc.rust-lang.org/std/primitive.f32.html\#method.to_int_unchecked
+  ],
+  quotes: false,
+)[
+  Rounds toward zero and converts to any primitive integer type, *assuming that the value is finite and fits in that type*.
+]
+
+---
+
+```rust
+pub fn convert(xs: &[f32], out: &mut [i32]) {
     for (x, o) in xs.iter().zip(out) {
         // *o = *x as i32;
         *o = unsafe { x.to_int_unchecked() };
@@ -308,9 +337,20 @@ pub fn saturating(xs: &[f32], out: &mut [i32]) {
 }
 ```
 
-== Intrinsics
+---
 
-== When you know your data, you can beat the compiler.
+```asm
+loop:
+  vcvttps2dq  ymm0, ymmword ptr [rdi + r9] ; load + convert
+  vmovups     ymmword ptr [rdx + r9], ymm0 ; store
+  add         r9, 32                       ; advance by 32 / 4 = 8 floats
+  cmp         r8, r9                       ; check if we’re at the end
+  jne         .loop                        ; goto loop start
+```
+
+= Accelerating neural networks
+
+---
 
 Here is an activation function used in the best chess engines:
 
