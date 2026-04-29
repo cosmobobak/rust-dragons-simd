@@ -489,6 +489,39 @@ Problem: You must mirror not just *bytes*, but the *bits within each byte*.
   ]
 ]
 
+== Vector-matrix multiplication refresher
+
+Multiplying a vector by an anti-diagonal matrix _reverses_ it.
+
+#text(size: 40pt)[
+  #set math.mat(delim: "[")
+  #set math.vec(delim: "[")
+  #let grad = gradient.linear(red, blue, space: oklch)
+  #let c1 = grad.sample(10%)
+  #let c2 = grad.sample(37%)
+  #let c3 = grad.sample(63%)
+  #let c4 = grad.sample(90%)
+  $
+    mat(
+      0, 0, 0, #text(c1)[1] ;
+      0, 0, #text(c2)[1], 0;
+      0, #text(c3)[1], 0, 0;
+      #text(c4)[1], 0, 0, 0;
+    ) dot
+    vec(
+      #text(c4)[a],
+      #text(c3)[b],
+      #text(c2)[c],
+      #text(c1)[d],
+    ) = vec(
+      #text(c1)[d],
+      #text(c2)[c],
+      #text(c3)[b],
+      #text(c4)[a],
+    )
+  $
+]
+
 ---
 
 #text[
@@ -502,15 +535,13 @@ Problem: You must mirror not just *bytes*, but the *bits within each byte*.
     columns: (3fr, 2fr),
     rows: auto,
     rect[
-      GF2P8AFFINEQB is $(A · x) ⊕ b$ in $"GF"(2)$
-      // #linebreak()
-      for each byte.
+      GF2P8AFFINEQB computes $(A · x) ⊕ b$ in $"GF"(2)^8$.
       #linebreak()
       With the anti-diagonal matrix $A$, within each byte,
       #linebreak()
       output bit k = input bit (7 – k).
 
-      // #pause
+      #pause
 
       ```rust
       fn bit_reverse(x: [u8; 64]) -> [u8; 64] {
