@@ -62,6 +62,7 @@
 #outline(title: none, indent: 1em, depth: 1)
 
 = What’s SIMD?
+_A miserable little pile of bits_
 
 ---
 
@@ -140,6 +141,7 @@ pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
 ---
 
 = Why should you care?
+_Computers haven’t got faster since 2006._
 
 ---
 
@@ -151,6 +153,8 @@ This was achievable in virtue of #smallcaps[dennard scaling] – the observation
 
 Around #text(number-type: "old-style")[2006], Dennard scaling broke down, and shrinking
 transistors no longer reduced their power consumption proportionally.
+
+Highly recommended: Cantrill’s #link("https://www.infoq.com/presentations/moore-law-expiring/")[_No Moore Left to Give: Enterprise Computing after Moore's Law_]
 
 ---
 
@@ -175,6 +179,7 @@ To keep making programs faster, we now have to exploit *parallelism*, #linebreak
 and #smallcaps[simd] is an excellent place to start.
 
 = Autovectorisation
+_LLVM loves writing SIMD and deleting loops, and it’s all out of loops._
 
 ---
 
@@ -257,7 +262,7 @@ _Convert With Truncation Packed Single Precision Floating-Point Values to Packed
 
 #quote(attribution: link(
   "https://www.felixcloutier.com/x86/cvttps2dq",
-)[www.felixcloutier.com/x86/cvttps2dq])[
+)[Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
   Converts … sixteen packed single precision floating-point values
   #linebreak()
   in the source operand to … sixteen signed doubleword integers in
@@ -321,7 +326,6 @@ where
   attribution: link("https://doc.rust-lang.org/std/primitive.f32.html#method.to_int_unchecked")[
     doc.rust-lang.org/std/primitive.f32.html\#method.to_int_unchecked
   ],
-  quotes: false,
 )[
   Rounds toward zero and converts to any primitive integer type, *assuming that the value is finite and fits in that type*.
 ]
@@ -349,12 +353,22 @@ loop:
 ```
 
 = Accelerating neural networks
+_A million chess positions solved per second._
 
 ---
 
 Here is an activation function used in the best chess engines:
 
 $ "SCReLU"(x) = "clamp"(x, 0, 1)^2 "       “Squared Clipped ReLU”" $
+
+---
+
+#figure(
+  image("assets/screlu.png", width: 100%),
+  numbering: none,
+) <screlu>
+
+---
 
 For a single output neuron, this is implemented like so:
 
@@ -418,8 +432,72 @@ fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
 = Finding a byte in a buffer
 
 = GFNI
+_Galois Field Affine Transformation_
+
+---
+
+#text(size: 40pt)[→ `GF2P8AFFINEQB`]
+#linebreak()
+_Galois Field Affine Transformation_
+
+#quote(attribution: link(
+  "https://www.felixcloutier.com/x86/gf2p8affineqb",
+)[Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
+  The AFFINEB instruction computes an affine transformation in the Galois Field 2#super[8].
+]
+
+
+#quote(attribution: link(
+  "https://www.felixcloutier.com/x86/gf2p8affineqb",
+)[Anime Tosho, Unexpected Uses for the Galois Field Affine Transformation Instruction])[
+  I suspect GFNI was aimed at accelerating SM4 encryption, however, one of the instructions can be used for many other purposes. […] of particular interest here is the Affine Transformation (GF2P8AFFINEQB), aka bit-matrix multiply, instruction.
+]
+
+---
+
+#text[
+  #set rect(
+    inset: 8pt,
+    width: 100%,
+    stroke: none,
+  )
+
+  #grid(
+    columns: (3fr, 2fr),
+    rows: auto,
+    rect[
+      GFNI computes $(A · x) ⊕ b$ over $"GF"(2)$
+      // #linebreak()
+      for each byte.
+      #linebreak()
+      With the anti-diagonal matrix $A$, within each byte,
+      #linebreak()
+      output bit k = input bit (7 – k).
+
+      ```rust
+      fn bit_reverse(x: m128i) -> m128i {
+          let p = 0x8040201008040201;
+          let m = set1_epi64x(p);
+          gf2p8affine_epi64_epi8(x, m, 0)
+      }
+      ```
+    ],
+    rect[
+      #figure(
+        image("assets/matrix.svg", width: 100%),
+        numbering: none,
+      ) <registers>
+    ],
+  )
+]
+
+// Compiles to vgf2p8affineqb xmm0, xmm0, [m], 0 — 16 bytes reversed in a single µop,
+// no LUT, no branch.
 
 = Advice for the working programmer
+_Please make your data more boring._
+
+---
 
 - general coding style (operate on batches)
 - → cite casey, matklad.
@@ -441,6 +519,7 @@ fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
 
 // Thoughts
 // Slides 9 and 10 are great - not too much to read and your voiceover is to explain the content is excellent
-// When showing instructions, consider highlighting them as you mention them? Or add an extra diagram showing it operating on the numbers?
+// When showing instructions, consider highlighting them as you mention them?
+// Or add an extra diagram showing it operating on the numbers?
 // Slide 17 - consider add an exmaple number to demonstrate the clamping and squaring
 // Note: we can see you cursor but it's small
