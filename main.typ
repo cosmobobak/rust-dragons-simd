@@ -26,7 +26,7 @@
 )
 
 #set text(font: "EB Garamond", weight: "light", size: 20pt)
-#show raw: set text(font: "TX-02")
+#show raw: set text(font: ("Berkeley Mono", "TX-02"))
 
 #set strong(delta: 175)
 #set par(justify: true)
@@ -240,7 +240,7 @@ _LLVM loves writing SIMD and deleting loops, and it’s all out of loops._
 
 ---
 
-The compiler cannot always perform #smallcaps[autovectorisation], and even when it succeeds, it may produce very suboptimal vectorised code.
+The compiler cannot always perform autovectorisation, and even when it succeeds, it may produce very suboptimal vectorised code.
 
 #pause
 
@@ -446,18 +446,54 @@ _Galois Field Affine Transformation_
   The AFFINEB instruction computes an affine transformation in the Galois Field 2#super[8].
 ]
 
-
 #quote(attribution: link(
-  "https://www.felixcloutier.com/x86/gf2p8affineqb",
+  "https://gist.github.com/animetosho/d3ca95da2131b5813e16b5bb1b137ca0",
 )[Anime Tosho, Unexpected Uses for the Galois Field Affine Transformation Instruction])[
   I suspect GFNI was aimed at accelerating SM4 encryption, however, one of the instructions can be used for many other purposes. […] of particular interest here is the Affine Transformation (GF2P8AFFINEQB), aka bit-matrix multiply, instruction.
 ]
 
 ---
 
+== Within-byte bit reversal
+
+Imagine: you have a black-and-white display, like an E-ink screen or a thermal receipt printer.
+
+In memory, images for these are stored as 1-bit-per-pixel, so a single byte holds 8 pixels.
+
+How might you efficiently implement _mirroring_?
+
+#pause
+
+Problem: You must mirror not just *bytes*, but the *bits within each byte*.
+
+\
+
+#text(size: 20pt, font: ("Berkeley Mono", "TX-02"))[
+  #set par(justify: false)
+  #show raw.where(block: false): set text(1em / 0.8)
+  #let rb(content) = {
+    set text(fill: gradient.linear(red, blue, space: oklch))
+    box(content)
+  }
+  #let br(content) = {
+    set text(fill: gradient.linear(blue, red, space: oklch))
+    box(content)
+  }
+  #align(center)[
+    0b #rb[11110000] #rb[10101010] #rb[10110100] #rb[10100100] #rb[01111100] #rb[10101001] …
+    #linebreak()
+    `     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙    `
+    #linebreak()
+    0b #br[00001111] #br[01010101] #br[00101101] #br[00100101] #br[00111110] #br[10010101] …
+
+  ]
+]
+
+---
+
 #text[
   #set rect(
-    inset: 8pt,
+    inset: 0pt,
     width: 100%,
     stroke: none,
   )
@@ -466,7 +502,7 @@ _Galois Field Affine Transformation_
     columns: (3fr, 2fr),
     rows: auto,
     rect[
-      GFNI computes $(A · x) ⊕ b$ over $"GF"(2)$
+      GF2P8AFFINEQB is $(A · x) ⊕ b$ in $"GF"(2)$
       // #linebreak()
       for each byte.
       #linebreak()
@@ -474,12 +510,20 @@ _Galois Field Affine Transformation_
       #linebreak()
       output bit k = input bit (7 – k).
 
+      // #pause
+
       ```rust
-      fn bit_reverse(x: m128i) -> m128i {
-          let p = 0x8040201008040201;
-          let m = set1_epi64x(p);
-          gf2p8affine_epi64_epi8(x, m, 0)
+      fn bit_reverse(x: [u8; 64]) -> [u8; 64] {
+          let m = _mm512_set1_epi64(ANTI_DIAG);
+          _mm512_gf2p8affine_epi64_epi8(x, m, 0)
       }
+      ```
+
+      #h(1fr) ↓ #h(2fr)
+
+      ```asm
+      vgf2p8affineqb zmm0, zmm0,
+        qword ptr [rip + .ANTI_DIAG]{1to8}, 0
       ```
     ],
     rect[
@@ -490,9 +534,6 @@ _Galois Field Affine Transformation_
     ],
   )
 ]
-
-// Compiles to vgf2p8affineqb xmm0, xmm0, [m], 0 — 16 bytes reversed in a single µop,
-// no LUT, no branch.
 
 = Advice for the working programmer
 _Please make your data more boring._
