@@ -1,0 +1,66 @@
+<svg width="260" height="240" viewBox="0 0 260 240" role="img" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+    <style>
+      .bg {
+        fill: #fafafa;
+      }
+      .ts {
+        font-family: 'Berkeley Mono', 'TX-02', 'EB Garamond', sans-serif;
+        fill: #23373b;
+      }
+    </style>
+  </defs>
+  
+    <desc>An 8 by 8 matrix with 1s along the anti-diagonal, encoding bit reversal as matrix multiplication over GF(2).</desc>
+
+    <text class="ts" x="138" y="14" text-anchor="middle">input bit</text>
+    <text class="ts" x="22" y="130" text-anchor="middle" transform="rotate(-90 22 130)">output bit</text>
+
+    <text class="ts" x="61" y="32" text-anchor="middle">0</text>
+    <text class="ts" x="83" y="32" text-anchor="middle">1</text>
+    <text class="ts" x="105" y="32" text-anchor="middle">2</text>
+    <text class="ts" x="127" y="32" text-anchor="middle">3</text>
+    <text class="ts" x="149" y="32" text-anchor="middle">4</text>
+    <text class="ts" x="171" y="32" text-anchor="middle">5</text>
+    <text class="ts" x="193" y="32" text-anchor="middle">6</text>
+    <text class="ts" x="215" y="32" text-anchor="middle">7</text>
+
+    <text class="ts" x="40" y="53" text-anchor="end" dominant-baseline="central">0</text>
+    <text class="ts" x="40" y="75" text-anchor="end" dominant-baseline="central">1</text>
+    <text class="ts" x="40" y="97" text-anchor="end" dominant-baseline="central">2</text>
+    <text class="ts" x="40" y="119" text-anchor="end" dominant-baseline="central">3</text>
+    <text class="ts" x="40" y="141" text-anchor="end" dominant-baseline="central">4</text>
+    <text class="ts" x="40" y="163" text-anchor="end" dominant-baseline="central">5</text>
+    <text class="ts" x="40" y="185" text-anchor="end" dominant-baseline="central">6</text>
+    <text class="ts" x="40" y="207" text-anchor="end" dominant-baseline="central">7</text>
+
+    <rect x="50" y="42" width="176" height="176" fill="none" stroke="#23373b" stroke-width="0.5"></rect>
+
+    <g stroke="#23373b" stroke-width="0.5">
+    <line x1="72" y1="42" x2="72" y2="218"></line>
+    <line x1="94" y1="42" x2="94" y2="218"></line>
+    <line x1="116" y1="42" x2="116" y2="218"></line>
+    <line x1="138" y1="42" x2="138" y2="218"></line>
+    <line x1="160" y1="42" x2="160" y2="218"></line>
+    <line x1="182" y1="42" x2="182" y2="218"></line>
+    <line x1="204" y1="42" x2="204" y2="218"></line>
+    <line x1="50" y1="64" x2="226" y2="64"></line>
+    <line x1="50" y1="86" x2="226" y2="86"></line>
+    <line x1="50" y1="108" x2="226" y2="108"></line>
+    <line x1="50" y1="130" x2="226" y2="130"></line>
+    <line x1="50" y1="152" x2="226" y2="152"></line>
+    <line x1="50" y1="174" x2="226" y2="174"></line>
+    <line x1="50" y1="196" x2="226" y2="196"></line>
+    </g>
+
+    <g class="c-purple">
+    <rect x="204" y="42" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="182" y="64" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="160" y="86" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="138" y="108" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="116" y="130" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="94" y="152" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="72" y="174" width="22" height="22" stroke-width="0.5"></rect>
+    <rect x="50" y="196" width="22" height="22" stroke-width="0.5"></rect>
+    </g>
+</svg>
