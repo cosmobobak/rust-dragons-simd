@@ -430,6 +430,11 @@ fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
 ```
 
 = Finding a byte in a buffer
+_Neat tagline under construction_
+
+---
+
+
 
 = GFNI
 _Galois Field Affine Transformation_
@@ -497,10 +502,12 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
   #set math.mat(delim: "[")
   #set math.vec(delim: "[")
   #let grad = gradient.linear(red, blue, space: oklch)
-  #let c1 = grad.sample(10%)
-  #let c2 = grad.sample(37%)
-  #let c3 = grad.sample(63%)
-  #let c4 = grad.sample(90%)
+  #let lo = 20%
+  #let hi = 80%
+  #let c1 = grad.sample(lo + (hi - lo) * 0 / 3)
+  #let c2 = grad.sample(lo + (hi - lo) * 1 / 3)
+  #let c3 = grad.sample(lo + (hi - lo) * 2 / 3)
+  #let c4 = grad.sample(lo + (hi - lo) * 3 / 3)
   $
     mat(
       0, 0, 0, #text(c1)[1] ;
@@ -522,7 +529,7 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
   $
 ]
 
----
+== How do we use GF2P8AFFINEQB to do it?
 
 #text[
   #set rect(
@@ -535,7 +542,7 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
     columns: (3fr, 2fr),
     rows: auto,
     rect[
-      GF2P8AFFINEQB computes $(A · x) ⊕ b$ in $"GF"(2)^8$.
+      GF2P8AFFINEQB computes $(A · x) ⊕ b$ in $"GF"(2^8)$.
       #linebreak()
       With the anti-diagonal matrix $A$, within each byte,
       #linebreak()

@@ -53,15 +53,15 @@
     <line x1="50" y1="196" x2="226" y2="196"></line>
     </g>
 
-    <g class="c-purple">
-    <rect x="204" y="42" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="182" y="64" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="160" y="86" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="138" y="108" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="116" y="130" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="94" y="152" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="72" y="174" width="22" height="22" stroke-width="0.5"></rect>
-    <rect x="50" y="196" width="22" height="22" stroke-width="0.5"></rect>
+    <g>
+    <rect x="204" y="42" width="22" height="22" fill="#416ee0" stroke-width="0.5"></rect>
+    <rect x="182" y="64" width="22" height="22" fill="#6d65e4" stroke-width="0.5"></rect>
+    <rect x="160" y="86" width="22" height="22" fill="#8f5bdf" stroke-width="0.5"></rect>
+    <rect x="138" y="108" width="22" height="22" fill="#ad52d1" stroke-width="0.5"></rect>
+    <rect x="116" y="130" width="22" height="22" fill="#c749bb" stroke-width="0.5"></rect>
+    <rect x="94" y="152" width="22" height="22" fill="#de419e" stroke-width="0.5"></rect>
+    <rect x="72" y="174" width="22" height="22" fill="#ef3b7a" stroke-width="0.5"></rect>
+    <rect x="50" y="196" width="22" height="22" fill="#fb3d4d" stroke-width="0.5"></rect>
     </g>
 
     <text class="ts" x="138" y="236" text-anchor="middle">0x8040201008040201</text>
