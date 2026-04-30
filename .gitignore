@@ -1,5 +1,5 @@
 *.pdf
 *.eps
-*.png
+# *.png
 target/
 Cargo.lock
