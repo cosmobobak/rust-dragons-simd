@@ -2,7 +2,7 @@
 #import themes.metropolis: *
 
 #import "@preview/numbly:0.1.0": numbly
-
+#import "@preview/cetz:0.3.4": canvas, draw
 // #import "@preview/pinit:0.2.2": *
 
 #show: metropolis-theme.with(
@@ -61,7 +61,7 @@
 
 #outline(title: none, indent: 1em, depth: 1)
 
-= What’s SIMD?
+= What is SIMD?
 _A miserable little pile of bits_
 
 ---
@@ -429,14 +429,108 @@ fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
 }
 ```
 
-= Finding a byte in a buffer
-_Neat tagline under construction_
+= Parsing JSON at incredible speed
+_We are thus motivated to make JSON parsing as fast as possible._
 
 ---
 
+#smallcaps[Langdale & Lemire (2019)]#footnote[
+  #link("https://arxiv.org/abs/1902.08318")[Arxiv / Parsing Gigabytes of JSON per Second]
+] present a SIMD algorithm for parsing JSON,
+the first to process gigabytes of data per second on a single core.
 
+This algorithm involves the detection of
+_structural characters_ – ‘`[`’, ‘`]`’, ‘`{`’, ‘`}`’, ‘`:`’, and ‘`,`’ – the characters that delimit the locations of objects and arrays.
 
-= GFNI
+---
+
+#figure(
+  grid(
+    columns: (1fr, 1.2fr),
+    column-gutter: 1em,
+    align: horizon,
+
+    ```json
+    {
+      "width": 800,
+      "height": 600,
+      "title": "myhouse",
+      "url": "http://ex.com/img.png",
+      "private": false,
+      "thumbnail": {
+        "url": "http://ex.com/th.png",
+        "height": 125,
+        "width": 100
+      },
+      "tags": [ 116, 943, 234 ],
+      "owner": null
+    }
+    ```,
+
+    canvas(length: 1cm, {
+      import draw: *
+
+      let indent = 0.5
+      let row-h = 0.85
+
+      let node(level, row, body, name) = content(
+        (level * indent, -row * row-h),
+        box(
+          stroke: 0.8pt + black,
+          inset: (x: 5pt, y: 3.7pt),
+          fill: white,
+          body,
+        ),
+        anchor: "west",
+        name: name,
+      )
+
+      let spine(parent, children) = on-layer(-1, {
+        let last = children.last()
+        // single continuous vertical from parent's center down to the last child's row
+        line(parent + ".west", (parent + ".west", "|-", last + ".west"))
+        // a horizontal tick into each child
+        for c in children {
+          line((parent + ".west", "|-", c + ".west"), c + ".west")
+        }
+      })
+
+      node(0, 0, [`root`], "root")
+      node(1, 1, raw("\"width\": 800", lang: "json"), "a")
+      node(1, 2, raw("\"height\": 600", lang: "json"), "b")
+      node(1, 3, raw("\"title\": \"myhouse\"", lang: "json"), "c")
+      node(1, 4, raw("\"url\": \"http://ex.com/img.png\"", lang: "json"), "d")
+      node(1, 5, raw("\"private\": false", lang: "json"), "e")
+      node(1, 6, raw("\"thumbnail\"", lang: "json"), "thumb")
+      node(2, 7, raw("\"url\": \"http://ex.com/th.png\"", lang: "json"), "t1")
+      node(2, 8, raw("\"height\": 125", lang: "json"), "t2")
+      node(2, 9, raw("\"width\": 100", lang: "json"), "t3")
+      node(1, 10, raw("\"tags\"", lang: "json"), "arr")
+      node(2, 11, raw("116", lang: "json"), "ar1")
+      node(2, 12, raw("943", lang: "json"), "ar2")
+      node(2, 13, raw("234", lang: "json"), "ar3")
+      node(1, 14, raw("\"owner\": null", lang: "json"), "owner")
+
+      spine("root", ("a", "b", "c", "d", "e", "thumb", "arr", "owner"))
+      spine("thumb", ("t1", "t2", "t3"))
+      spine("arr", ("ar1", "ar2", "ar3"))
+    }),
+  ),
+) <fig:jsonexample>
+
+---
+
+#align(center)[\~ under construction \~]
+
+To be written:
+
+- slide highlighting all structural characters in the previous JSON document
+- slide explaining cmp-eq → or → tzcnt → blsr
+- code listing
+
+---
+
+= A really weird instruction
 _Galois Field Affine Transformation_
 
 ---
