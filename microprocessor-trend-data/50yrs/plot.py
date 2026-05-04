@@ -161,15 +161,11 @@ ax.spines["right"].set_linewidth(1.5)
 ax.spines["bottom"].set_linewidth(1.5)
 ax.spines["left"].set_linewidth(1.5)
 
-plt.savefig("50-years-processor-trend.png", dpi=200, bbox_inches="tight")
-plt.savefig("50-years-processor-trend.eps", bbox_inches="tight")
-print("Saved 50-years-processor-trend.png and .eps")
+plt.savefig("50-years-processor-trend.svg", dpi=200, bbox_inches="tight")
 
 # --- overlay pre/post-2006 log-linear fits and save a second copy ---
 SPLIT_YEAR = 2006
-ax.axvline(
-    SPLIT_YEAR, color="#444444", lw=1.2, ls="--", alpha=0.7, zorder=1
-)
+ax.axvline(SPLIT_YEAR, color="#444444", lw=1.2, ls="--", alpha=0.7, zorder=1)
 for filename, _m, color, _m2, _labels in series:
     x, y = read_dat(filename)
     if len(x) == 0:
@@ -190,9 +186,7 @@ for filename, _m, color, _m2, _labels in series:
         hi = xs.max() if x_hi is None else x_hi
         xfit = np.linspace(lo, hi, 100)
         yfit = 10 ** (slope * xfit + intercept)
-        ax.plot(xfit, yfit, color="white", lw=5, solid_capstyle="round", zorder=4)
+        ax.plot(xfit, yfit, color="#fafafa", lw=5, solid_capstyle="round", zorder=4)
         ax.plot(xfit, yfit, color=color, lw=2.5, solid_capstyle="round", zorder=5)
 
-plt.savefig("50-years-processor-trend-fits.png", dpi=200, bbox_inches="tight")
-plt.savefig("50-years-processor-trend-fits.eps", bbox_inches="tight")
-print("Saved 50-years-processor-trend-fits.png and .eps")
+plt.savefig("50-years-processor-trend-fits.svg", dpi=200, bbox_inches="tight")

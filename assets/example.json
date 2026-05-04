@@ -1,0 +1,14 @@
+{
+  "width": 800,
+  "height": 600,
+  "title": "myhouse",
+  "url": "http://ex.com/img.png",
+  "private": false,
+  "thumbnail": {
+    "url": "http://ex.com/th.png",
+    "height": 125,
+    "width": 100
+  },
+  "tags": [ 116, 943, 234 ],
+  "owner": null
+}

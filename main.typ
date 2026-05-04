@@ -160,9 +160,9 @@ Highly recommended: Cantrill’s #link("https://www.infoq.com/presentations/moor
 
 #figure(
   alternatives[
-    #image("microprocessor-trend-data/50yrs/50-years-processor-trend.png", width: 85%)
+    #image("assets/50-years-processor-trend.svg", width: 85%)
   ][
-    #image("microprocessor-trend-data/50yrs/50-years-processor-trend-fits.png", width: 85%)
+    #image("assets/50-years-processor-trend-fits.svg", width: 85%)
   ],
   numbering: none,
   caption: text(size: .8em)[
@@ -179,7 +179,7 @@ To keep making programs faster, we now have to exploit *parallelism*, #linebreak
 and #smallcaps[simd] is an excellent place to start.
 
 = Autovectorisation
-_LLVM loves writing SIMD and deleting loops, and it’s all out of loops._
+_In which LLVM completely rewrites the program._
 
 ---
 
@@ -256,13 +256,16 @@ pub fn convert(xs: &[f32], out: &mut [i32]) {
 
 == Fast float-to-integer conversion
 
-#text(size: 40pt)[→ `CVTTPS2DQ`]
+#text(size: 40pt)[
+  → #link("https://www.felixcloutier.com/x86/cvttps2dq")[
+    CVT·T·PS·2·DQ
+  ]]
 #linebreak()
-_Convert With Truncation Packed Single Precision Floating-Point Values to PackedSigned Doubleword Integer Values_
+_Convert With Truncation Packed Single Precision Floating-Point Values
+#linebreak()
+to Packed Signed Doubleword Integer Values_
 
-#quote(attribution: link(
-  "https://www.felixcloutier.com/x86/cvttps2dq",
-)[Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
+#quote(attribution: [Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
   Converts … sixteen packed single precision floating-point values
   #linebreak()
   in the source operand to … sixteen signed doubleword integers in
@@ -352,6 +355,13 @@ loop:
   jne         .loop                        ; goto loop start
 ```
 
+== Benchmark: CVTTPS2DQ vs. naïve implementation
+
+#figure(
+  image("assets/cvttps2dq-speedup.svg", width: 65%),
+  numbering: none,
+) <screlu>
+
 = Accelerating neural networks
 _A million chess positions solved per second._
 
@@ -434,13 +444,13 @@ _We are thus motivated to make JSON parsing as fast as possible._
 
 ---
 
-#smallcaps[Langdale & Lemire (2019)]#footnote[
-  #link("https://arxiv.org/abs/1902.08318")[Arxiv / Parsing Gigabytes of JSON per Second]
-] present a SIMD algorithm for parsing JSON,
-the first to process gigabytes of data per second on a single core.
+#link("https://arxiv.org/abs/1902.08318")[#smallcaps[Langdale & Lemire (2019)]]
+present a SIMD algorithm for parsing JSON, the first to process gigabytes of
+data per second on a single core.
 
-This algorithm involves the detection of
-_structural characters_ – ‘`[`’, ‘`]`’, ‘`{`’, ‘`}`’, ‘`:`’, and ‘`,`’ – the characters that delimit the locations of objects and arrays.
+A subproblem in their algorithm is the classification of
+#smallcaps[structural characters] – ‘`[`’, ‘`]`’, ‘`{`’, ‘`}`’, ‘`:`’, and ‘`,`’ – those
+characters that delimit the locations of objects and arrays.
 
 ---
 
@@ -520,6 +530,135 @@ _structural characters_ – ‘`[`’, ‘`]`’, ‘`{`’, ‘`}`’, ‘`:`�
 
 ---
 
+#text()[
+  #show raw.where(lang: "sjson"): r => {
+    let c = gradient.linear(red, blue, space: oklch).sample(15%)
+    let c2 = gradient.linear(red, blue, space: oklch).sample(85%)
+    show ",": set text(c)
+    show "}": set text(c)
+    show "{": set text(c)
+    show "]": set text(c)
+    show "[": set text(c)
+    show ":": set text(c)
+
+    r
+  }
+  ```sjson
+  {
+    "width": 800,
+    "height": 600,
+    "title": "myhouse",
+    "url": "http://ex.com/img.png",
+    "private": false,
+    "thumbnail": {
+      "url": "http://ex.com/th.png",
+      "height": 125,
+      "width": 100
+    },
+    "tags": [ 116, 943, 234 ],
+    "owner": null
+  }
+  ```
+]
+
+#pause
+
+Goal: Efficiently extract the indices of these structural characters.
+
+---
+
+#text(font: ("Berkeley Mono", "TX-02"))[
+  #set par(justify: false)
+  #let rb(content) = {
+    set text(fill: gradient.linear(red, blue, space: oklch))
+    box(content)
+  }
+  #let br(content) = {
+    set text(fill: gradient.linear(blue, red, space: oklch))
+    box(content)
+  }
+  #show raw.where(lang: "sjson"): r => {
+    let c = gradient.linear(red, blue, space: oklch).sample(15%)
+    show ",": set text(c)
+    show "}": set text(c)
+    show "{": set text(c)
+    show "]": set text(c)
+    show "[": set text(c)
+    show ":": set text(c)
+
+    r
+  }
+  #show raw.where(lang: "bits"): r => {
+    let c = gradient.linear(red, blue, space: oklch).sample(15%)
+    show "1": set text(c)
+    show "0": set text(gray)
+
+    r
+  }
+  #align(center)[
+    ```sjson
+     “{  "width": 800,  "height": 600,  "title": "myhouse",  "url": "http://e…”
+    ```
+    ```bits
+    b10000000001000010000000000100001000000000100000000001000000010000001000…
+    ```
+  ]
+]
+
+== Naïve solution
+
+```rust
+fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
+  for (i, c) in json.as_bytes().iter().enumerate() {
+    if STRUCTURAL.contains(c) {
+      bitmask[i / 64] |= 1 << (i % 64);
+    }
+  }
+}
+```
+
+== Efficiently extracting structural indices
+
+#grid(
+  columns: (1fr, 1.2fr),
+  column-gutter: 3em,
+  align: top,
+  [
+    #text(size: 40pt)[
+      → #link("https://www.felixcloutier.com/x86/pcmpeqb:pcmpeqw:pcmpeqd")[
+        P·CMP·EQ·B
+      ]]
+    #linebreak()
+    _Compare Packed Data for Equal_
+
+    “Performs a SIMD compare for equality of the packed bytes.
+
+    If equal, the corresponding lane in the destination
+    is set to all 1s; otherwise, it is set to all 0s.”
+  ],
+  [
+    #text(size: 40pt)[
+      → #link("https://www.felixcloutier.com/x86/pmovmskb")[
+        P·MOV·MSK·B
+      ]]
+    #linebreak()
+    _Move Byte Mask_
+
+    “Creates a mask made up of the most significant bit of each byte of
+    the source operand and stores the result in the low byte or word of
+    the destination.”
+  ],
+)
+
+#align(
+  right,
+)[
+  — Intel® 64 and IA-32 Architectures Software Developer’s Manual
+  #footnote()[Quotes edited for clarity & concision.
+  ]]
+
+---
+
 #align(center)[\~ under construction \~]
 
 To be written:
@@ -535,13 +674,14 @@ _Galois Field Affine Transformation_
 
 ---
 
-#text(size: 40pt)[→ `GF2P8AFFINEQB`]
+#text(size: 40pt)[
+  → #link("https://www.felixcloutier.com/x86/gf2p8affineqb")[
+    GF2P8·AFFINE·Q·B
+  ]]
 #linebreak()
 _Galois Field Affine Transformation_
 
-#quote(attribution: link(
-  "https://www.felixcloutier.com/x86/gf2p8affineqb",
-)[Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
+#quote(attribution: "Intel® 64 and IA-32 Architectures Software Developer’s Manual")[
   The AFFINEB instruction computes an affine transformation in the Galois Field 2#super[8].
 ]
 
@@ -584,7 +724,6 @@ Problem: You must mirror not just *bytes*, but the *bits within each byte*.
     `     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙     ↘  ↙    `
     #linebreak()
     0b #br[00001111] #br[01010101] #br[00101101] #br[00100101] #br[00111110] #br[10010101] …
-
   ]
 ]
 
