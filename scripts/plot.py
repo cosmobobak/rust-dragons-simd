@@ -12,14 +12,20 @@ import matplotlib.pyplot as plt
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["EB Garamond"]
+plt.rcParams["font.size"] = 16
 
 fig, ax = plt.subplots(figsize=(8, 5.5))
 
 ax.bar(
-    ["Naïve", "CVTTPS2DQ"], [1.14, 5.05], width=0.5, facecolor=["#5b69e4", "#f33b73"]
+    ["Naïve", "CVTTPS2DQ"],
+    [1.14 * 10**9, 5.05 * 10**9],
+    width=0.5,
+    facecolor=["#5b69e4", "#f33b73"],
 )
 
 ax.set_title("Speedup from enabling Autovectorisation", fontsize=20, pad=8)
+
+ax.set_ylabel("Floating-point values processed per second")
 
 ax.set_facecolor("#fafafa")
 fig.patch.set_facecolor("#fafafa")
