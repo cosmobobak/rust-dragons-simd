@@ -258,7 +258,11 @@ pub fn convert(xs: &[f32], out: &mut [i32]) {
 
 #text(size: 40pt)[
   → #link("https://www.felixcloutier.com/x86/cvttps2dq")[
+    #set text(features: ("case",))
+    #let u(c) = text(c, baseline: -4pt)
     CVT·T·PS·2·DQ
+    #smallcaps[cvt·t·ps·2·dq]
+    < TODO >
   ]]
 #linebreak()
 _Convert With Truncation Packed Single Precision Floating-Point Values
