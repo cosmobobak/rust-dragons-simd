@@ -33,7 +33,14 @@
 
 #show link: it => {
   if type(it.dest) == str {
-    box[#it#h(0pt)#text(fill: rgb("#a00"), baseline: -0.15em)[°]]
+    let space = if measure(it.body).height > 20pt {
+      -7pt
+    } else {
+      0pt
+    }
+    let c = [°]
+    // let c = [⁰]
+    box[#it#h(space)#text(fill: rgb("#a00"), baseline: -0.15em)[#c]]
   } else {
     it
   }
@@ -45,7 +52,7 @@
 // #show par: set text(number-type: "old-style")
 // #show figure.caption: set text(number-type: "old-style")
 
-#set quote(block: true, quotes: true)
+#set quote(block: true)
 
 #title-slide()
 
@@ -261,8 +268,6 @@ pub fn convert(xs: &[f32], out: &mut [i32]) {
     #set text(features: ("case",))
     #let u(c) = text(c, baseline: -4pt)
     CVT·T·PS·2·DQ
-    #smallcaps[cvt·t·ps·2·dq]
-    < TODO >
   ]]
 #linebreak()
 _Convert With Truncation Packed Single Precision Floating-Point Values
@@ -633,12 +638,12 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
         P·CMP·EQ·B
       ]]
     #linebreak()
-    _Compare Packed Data for Equal_
+    _Compare Packed Bytes for Equality_
 
-    “Performs a SIMD compare for equality of the packed bytes.
+    Performs a SIMD compare for equality of the packed bytes.
 
     If equal, the corresponding lane in the destination
-    is set to all 1s; otherwise, it is set to all 0s.”
+    is set to all 1s; otherwise, it is set to all 0s.
   ],
   [
     #text(size: 40pt)[
@@ -646,11 +651,11 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
         P·MOV·MSK·B
       ]]
     #linebreak()
-    _Move Byte Mask_
+    _Create Byte Mask_
 
-    “Creates a mask made up of the most significant bit of each byte of
+    Creates a mask made up of the most significant bit of each byte of
     the source operand and stores the result in the low byte or word of
-    the destination.”
+    the destination.
   ],
 )
 
@@ -670,6 +675,13 @@ To be written:
 - slide highlighting all structural characters in the previous JSON document
 - slide explaining cmp-eq → or → tzcnt → blsr
 - code listing
+
+---
+
+#figure(
+  image("assets/json-speedup.svg", width: 65%),
+  numbering: none,
+) <registers>
 
 ---
 
