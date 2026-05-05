@@ -155,13 +155,14 @@ _Computers haven’t got faster since 2006._
 For a long time, computers became faster by increasing *clock frequency*,
 thereby executing more instructions in the same time.
 
-This was achievable in virtue of #smallcaps[dennard scaling] – the observation that shrinking transistors did not affect their power density#footnote[That is, power
+This was achievable in virtue of #smallcaps[dennard scaling] – the observation that
+shrinking transistors did not affect their power density#footnote[That is, power
   per unit area.], allowing components to run at lower power and higher frequency.
 
 Around #text(number-type: "old-style")[2006], Dennard scaling broke down, and shrinking
 transistors no longer reduced their power consumption proportionally.
 
-Highly recommended: Cantrill’s #link("https://www.infoq.com/presentations/moore-law-expiring/")[_No Moore Left to Give: Enterprise Computing after Moore's Law_]
+// Highly recommended: Cantrill’s #link("https://www.infoq.com/presentations/moore-law-expiring/")[_No Moore Left to Give: Enterprise Computing after Moore's Law_]
 
 ---
 
@@ -389,62 +390,80 @@ $ "SCReLU"(x) = "clamp"(x, 0, 1)^2 "       “Squared Clipped ReLU”" $
 
 ---
 
-For a single output neuron, this is implemented like so:
+We wish to activate a set of neurons with SCReLU,
+#linebreak()
+then multiply the resulting values by a set of weights.
+
+$
+  "output"_i = "clamp"(x_i, 0, 1)^2 × w_i \
+$
+
+== Fixed-point arithmetic
+
+In performance-constrained settings, it is often profitable to perform
+operations #linebreak()using #smallcaps[fixed-point arithmetic].
+
+Given some #smallcaps[value of unity], $Q$, chosen to represent 1,
+
+$ "fixed-point-multiply"(a, b) = (a dot b) / Q $
+
+$ "e.g." space space space & 3.14 × 0.77 = 2.4178 \
+ approx & 314 × 77 space \/ space 100 = 241  $
+
+- Operations are *associative*.
+- Values can be smaller in memory, like `i16` or `i8`.
+
+---
+
+As such, we might implement the activate-and-weight operation in this manner:
 
 ```rust
-fn forward(x: &[i16; L1], w: &[i16; L1]) -> i32 {
-  let mut sum = 0;
-  for (x, w) in x.iter().zip(w) {
-    //      v--------- clip ----------v
-    let a = i32::from(*x).clamp(0, 255);
-    //     v---v square.           ^^^ value of unity
-    sum += a * a * i32::from(*w);
-  }
-  sum
+// inputs  : [i16; LAYER_SIZE]
+// weights : [i16; LAYER_SIZE]
+const Q: i32 = 255;
+for (input, weight) in inputs.iter().zip(weights) {
+  let activated = i32::from(input).clamp(0, Q).pow(2);
+  let weighted = activated * i32::from(weight);
+  // do something with `weighted`.
 }
 ```
+
+#pause
+
+Problem: Multiplications are occurring in `i32`.
+
+== The Lizard SCReLU trick
+
+Observation 1: Neural networks are trained with #smallcaps[weight clipping] –
+bounding $w in [-127, 127]$.
+
+Observation 2: SCReLU’s $"clamp"$ operation bounds the activation $a in [0, 255]$.
+
+Lucky fact: $ 255 × 127 <= 2^15 $
+
+Thus:
+
+$
+  & "clamp"(x_1, 0, 1)^2 × w_1 \
+  =& "clamp"(x_1, 0, 1) × "clamp"(x_1, 0, 1) × w_1 \
+  =& underbrace("clamp"(x_1, 0, 1) × w_1, "cannot overflow i16") × "clamp"(x_1, 0, 1)
+$
+
+---
+
+TODO: mullo and madd intel manual entries
 
 ---
 
 ```rust
-fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
-    const { assert!(L1.is_multiple_of(32)); }
-    unsafe {
-        let lo = _mm512_setzero_si512();
-        let hi = _mm512_set1_epi16(255);
-        let mut sum = _mm512_setzero_si512();
-        for (xc, wc) in x.chunks_exact(32).zip(w.chunks_exact(32)) {
-            let xv = _mm512_loadu_epi16(xc.as_ptr());
-            let wv = _mm512_loadu_epi16(wc.as_ptr());
-            let a  = _mm512_max_epi16(_mm512_min_epi16(xv, hi), lo);
-            let v  = _mm512_mullo_epi16(a, wv);
-            let v  = _mm512_madd_epi16(a, v);
-            sum    = _mm512_add_epi32(sum, v);
-        }
-        horizontal_reduce(sum)
-    }
-}
-```
-
----
-
-```rust
-fn forward(x : &[i16; L1], w : &[i16; L1]) -> i32 {
-    const { assert!(L1.is_multiple_of(32)); }
-    unsafe {
-        let lo = set_lanes_i16(0);
-        let hi = set_lanes_i16(255);
-        let mut sum = set_lanes_i16(0);
-        for (xc, wc) in x.chunks_exact(32).zip(w.chunks_exact(32)) {
-            let xv = load_i16(xc);
-            let wv = load_i16(wc);
-            let a  = max_i16(min_i16(xv, hi), lo);
-            let v  = mul_truncating_i16(a, wv); // ← pay attention!
-            let v  = mul_widening_i16(a, v);
-            sum    = add_i32(sum, v);
-        }
-        horizontal_reduce(sum)
-    }
+// inputs  : [i16; LAYER_SIZE]
+// weights : [i16; LAYER_SIZE]
+const Q: i16 = 255;
+for (input, weight) in inputs.iter().zip(weights) {      // chunks of 32
+  let activated = input.clamp(0, Q);
+  let mullo     = _mm512_mullo_epi16(activated, weight); // i16, by the lemma
+  let weighted  = _mm512_madd_epi16(activated, mullo);   // i32
+  // do something with `weighted`.
 }
 ```
 
@@ -616,6 +635,8 @@ Goal: Efficiently extract the indices of these structural characters.
 
 == Naïve solution
 
+Here’s a first pass at how one might solve this problem:
+
 ```rust
 fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
   for (i, c) in json.as_bytes().iter().enumerate() {
@@ -681,13 +702,24 @@ _Compare Packed Bytes for Equality_
 
 ---
 
-#align(center)[\~ under construction \~]
+And now here’s a SIMD implementation of the function from before:
 
-To be written:
+```rust
+fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
+    const STRUCTURAL: [u8; 6] = *b"{}[]:,";
 
-- slide highlighting all structural characters in the previous JSON document
-- slide explaining cmp-eq → or → tzcnt → blsr
-- code listing
+    // broadcast the character to check across the lanes
+    let tests = STRUCTURAL.map(|b| _mm512_set1_epi8(b as _));
+
+    for (json_block, out) in json.as_chunks::<64>().zip(bitmask) {
+        for test in tests {
+            // OR together all the matching locations.
+            *out |= _mm512_cmpeq_epu8_mask(json_block, test);
+        }
+    }
+}
+
+```
 
 ---
 
