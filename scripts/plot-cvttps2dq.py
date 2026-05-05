@@ -8,7 +8,7 @@
 # ]
 # ///
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # ty:ignore[unresolved-import]
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["EB Garamond"]
@@ -41,7 +41,7 @@ for i, (label, value) in enumerate(data_laptop.items()):
         value,
         width=0.375,
         facecolor=COLOURS[0],
-        label="Laptop" if i == 0 else None,
+        label="Intel® Core™ i7-13850HX" if i == 0 else None,
     )
 
 for i, (label, value) in enumerate(data_desktop.items()):
@@ -50,13 +50,13 @@ for i, (label, value) in enumerate(data_desktop.items()):
         value,
         width=0.375,
         facecolor=COLOURS[1],
-        label="Desktop" if i == 0 else None,
+        label="AMD Ryzen™ 9 9950X" if i == 0 else None,
     )
 
 ax.legend(loc="upper left", fontsize=12)
 
 ax.set_xticks([0, 1])
-ax.set_xticklabels(["Naïve", "CVTTPS2DQ"])
+ax.set_xticklabels(["Naïve", "SIMD"])
 
 ax.set_title("Speedup from enabling Autovectorisation", fontsize=20, pad=8)
 

@@ -152,7 +152,7 @@ _Computers haven’t got faster since 2006._
 
 ---
 
-For a long time, computers became faster by increasing clock frequency,
+For a long time, computers became faster by increasing *clock frequency*,
 thereby executing more instructions in the same time.
 
 This was achievable in virtue of #smallcaps[dennard scaling] – the observation that shrinking transistors did not affect their power density#footnote[That is, power
@@ -367,7 +367,7 @@ loop:
 == Benchmark: CVTTPS2DQ vs. naïve implementation
 
 #figure(
-  image("assets/cvttps2dq-speedup.svg", width: 65%),
+  image("assets/cvttps2dq-speedup.svg", width: 70%),
   numbering: none,
 ) <screlu>
 
@@ -609,7 +609,7 @@ Goal: Efficiently extract the indices of these structural characters.
      “{  "width": 800,  "height": 600,  "title": "myhouse",  "url": "http://e…”
     ```
     ```bits
-    b10000000001000010000000000100001000000000100000000001000000010000001000…
+    10000000001000010000000000100001000000000100000000001000000010000001000
     ```
   ]
 ]
@@ -668,6 +668,19 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
 
 ---
 
+#text(size: 40pt)[
+  → #link("https://www.felixcloutier.com/x86/pcmpeqb:pcmpeqw:pcmpeqd")[
+    P·CMP·EQ·B
+  ] on AVX-512]
+#linebreak()
+_Compare Packed Bytes for Equality_
+
+#quote(attribution: [Intel® 64 and IA-32 Architectures Software Developer’s Manual])[
+  EVEX encoded VPCMPEQB: The destination is a *mask register*.
+]
+
+---
+
 #align(center)[\~ under construction \~]
 
 To be written:
@@ -679,7 +692,7 @@ To be written:
 ---
 
 #figure(
-  image("assets/json-speedup.svg", width: 65%),
+  image("assets/json-speedup.svg", width: 70%),
   numbering: none,
 ) <registers>
 

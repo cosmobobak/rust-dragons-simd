@@ -8,7 +8,7 @@
 # ]
 # ///
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # ty:ignore[unresolved-import]
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["EB Garamond"]
