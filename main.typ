@@ -108,12 +108,20 @@ These vectors are 128–512 bits (16–64 bytes) in size, and correspond to CPU 
 #smallcaps[simd intrinsics] are built-in functions that will translate
 to a particular #smallcaps[simd instruction].
 
-```rust
-// core::arch::x86_64::
-pub fn _mm_add_epi32(a: m128i, b: m128i) → m128i
-// core::arch::aarch64::
-pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
-```
+#text()[
+  #show raw.where(lang: "rust"): r => {
+    // stupid hack for my own vanity
+    show "aarch64": set text(gradient.linear(red, blue, space: oklch))
+    show "x86_64": set text(gradient.linear(red, blue, space: oklch))
+    r
+  }
+  ```rust
+  // core::arch::x86_64::
+  pub fn _mm_add_epi32(a: __m128i, b: __m128i) → __m128i
+  // core::arch::aarch64::
+  pub fn vaddq_s32(a: int32×4_t, b: int32×4_t) → int32×4_t
+  ```
+]
 
 #quote(
   attribution: link(
@@ -134,7 +142,7 @@ pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
 #figure(
   image("assets/simd-add.svg", width: 80%),
   numbering: none,
-) <registers>
+) <simd-add>
 
 // ---
 //
@@ -148,7 +156,7 @@ pub fn vaddq_s32(a: int32x4, b: int32x4) → int32x4
 ---
 
 = Why should you care?
-_Computers haven’t got faster since 2006._
+_4GHz in 2006, and 4GHz now._
 
 ---
 
@@ -183,8 +191,15 @@ transistors no longer reduced their power consumption proportionally.
 
 ---
 
-To keep making programs faster, we now have to exploit *parallelism*, #linebreak()
-and #smallcaps[simd] is an excellent place to start.
+#box(width: 70%)[
+  To keep making programs faster, we now have to exploit *parallelism*,
+  and #smallcaps[simd] is an excellent place to start.
+
+  How much do we stand to gain?
+
+  An N-wide #smallcaps[simd] operation is as much as an N× speedup for free,
+  and on modern processors with AVX-512, *N can be as much as 64*.
+]
 
 = Autovectorisation
 _In which LLVM completely rewrites the program._
@@ -286,7 +301,9 @@ to Packed Signed Doubleword Integer Values_
   #linebreak()
   the floating-point invalid exception is raised, and if this exception is masked,
   #linebreak()
-  the indefinite integer value (0×80000000) is returned.
+  the indefinite integer value (0×80000000#footnote[
+    This is equal to Rust’s `i32::MIN`.
+  ]) is returned.
 ]
 
 ---
@@ -330,7 +347,7 @@ How do we show the compiler what we want? Do we need to use instrinsics? #pause 
 
 ```rust
 // f32::
-pub unsafe fn to_int_unchecked<Int>(self) -> Int
+pub unsafe fn to_int_unchecked<Int>(self) → Int
 where
     f32: FloatToInt<Int>,
 ```
@@ -370,7 +387,7 @@ loop:
 #figure(
   image("assets/cvttps2dq-speedup.svg", width: 70%),
   numbering: none,
-) <screlu>
+) <cvttps2dq-speedup>
 
 = Accelerating neural networks
 _A million chess positions solved per second._
@@ -460,6 +477,7 @@ $
   column-gutter: 3em,
   align: top,
   [
+    #set text(hyphenate: false)
     #text(size: 40pt)[
       → #link("https://www.felixcloutier.com/x86/pmullw")[
         P·MUL·LW
@@ -469,9 +487,10 @@ $
     #linebreak()
     and Store Low Result_
 
-    Performs a SIMD multiply of the packed 16-bit integers in the destination and the source, and stores the *low 16 bits* of each intermediate 32-bit result in the destination.
+    Performs a SIMD multiply of the packed i16s in the destination and the source, and stores the *low 16 bits* of each intermediate 32-bit result in the destination.
   ],
   [
+    #set text(hyphenate: false)
     #text(size: 40pt)[
       → #link("https://www.felixcloutier.com/x86/pmaddwd")[
         P·MADD·WD
@@ -479,7 +498,9 @@ $
     #linebreak()
     _Multiply and Add Packed Integers_
 
-    Multiplies the individual signed words of the destination by the corresponding signed words of the source, producing temporary signed double-word results. The results are then *summed* and stored in the destination.
+    Multiplies the i16s of the destination by the corresponding i16s of the source, producing temporary 32-bit results.
+
+    The results are then adjacently *summed* and stored in the destination.
   ],
 )
 
@@ -504,10 +525,10 @@ A more sophisticated implementation of the activate-and-weight operation might l
 // inputs  : [i16; LAYER_SIZE]
 // weights : [i16; LAYER_SIZE]
 const Q: i16 = 255;
-for (input, weight) in inputs.iter().zip(weights) {      // chunks of 32
-  let activated = input.clamp(0, Q);
-  let mullo     = _mm512_mullo_epi16(activated, weight); // i16, by the lemma
-  let weighted  = _mm512_madd_epi16(activated, mullo);   // → i32
+for (i, w) in inputs.chunks_exact(32).zip(weights.chunks_exact(32)) {
+  let a        = _mm512_min_epi16(_mm512_max_epi16(i, 0), Q);
+  let x        = _mm512_mullo_epi16(a, w); // P·MUL·LW
+  let weighted = _mm512_madd_epi16(a, x);  // P·MADD·WD
   // do something with `weighted`.
 }
 ```
@@ -701,6 +722,8 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
   column-gutter: 3em,
   align: top,
   [
+
+    #set text(hyphenate: false)
     #text(size: 40pt)[
       → #link("https://www.felixcloutier.com/x86/pcmpeqb:pcmpeqw:pcmpeqd")[
         P·CMP·EQ·B
@@ -714,6 +737,8 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
     is set to all 1s; otherwise, it is set to all 0s.
   ],
   [
+
+    #set text(hyphenate: false)
     #text(size: 40pt)[
       → #link("https://www.felixcloutier.com/x86/pmovmskb")[
         P·MOV·MSK·B
@@ -751,7 +776,7 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
     const STRUCTURAL: [u8; 6] = *b"{}[]:,";
 
     // broadcast the character to check across the lanes
-    let tests = STRUCTURAL.map(|b| _mm512_set1_epi8(b as _));
+    let tests = STRUCTURAL.map(|b| _mm512_set1_epi8(b as i8));
 
     for (json_block, out) in json.as_chunks::<64>().zip(bitmask) {
         for test in tests {
@@ -768,7 +793,7 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
 #figure(
   image("assets/json-speedup.svg", width: 70%),
   numbering: none,
-) <registers>
+) <json-speedup>
 
 ---
 
@@ -835,7 +860,7 @@ Problem: You must mirror not just *bytes*, but the *bits within each byte*.
 Naïvely, we might implement this by reversing the bits in each byte one at a time:
 
 ```rust
-fn bit_reverse(x: [u8; 64]) -> [u8; 64] {
+fn bit_reverse(x: [u8; 64]) → [u8; 64] {
   let mut result = [0; 64];
   for (i, byte) in x.iter().enumerate() {
     for j in 0..8 {
@@ -904,7 +929,7 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
       #pause
 
       ```rust
-      fn bit_reverse(x : [u8; 64]) -> [u8; 64] {
+      fn bit_reverse(x : [u8; 64]) → [u8; 64] {
           let m = _mm512_set1_epi64(ANTI_DIAG);
           _mm512_gf2p8affine_epi64_epi8(x, m, 0)
       }
@@ -921,7 +946,7 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
       #figure(
         image("assets/matrix.svg", width: 100%),
         numbering: none,
-      ) <registers>
+      ) <antidiagonal>
     ],
   )
 ]
@@ -992,21 +1017,19 @@ In order to vectorise, the compiler needs to be able to tell what’s going to h
 #show: appendix
 
 = Appendix
+_Know more! Become stronger! #linebreak() Go read this other stuff!_
 
 ---
 
-- #link("https://matklad.github.io/2023/11/15/push-ifs-up-and-fors-down.html")[Matklad – Push ifs up and fors down]
 - #link(
     "https://www.infoq.com/presentations/moore-law-expiring/",
   )[Cantrill – No Moore Left to Give: Enterprise Computing after Moore's Law]
+- #link("https://www.youtube.com/watch?v=tD5NrevFtbU")[Casey Muratori – “Clean” Code, Horrible Performance]
+- #link("https://matklad.github.io/2023/11/15/push-ifs-up-and-fors-down.html")[Matklad – Push `if`s up and `for`s down]
 - #link("https://www.felixcloutier.com/x86/")[Felix Cloutier’s x86 reference]
 - #link(
     "https://arxiv.org/abs/1902.08318",
   )[Langdale & Lemire (2019) – Parsing Gigabytes of JSON per Second]
 - #link(
-    "https://doc.rust-lang.org/std/primitive.f32.html#method.to_int_unchecked",
-  )[Rust’s `to_int_unchecked` documentation]
-- #link(
     "https://gist.github.com/animetosho/d3ca95da2131b5813e16b5bb1b137ca0",
   )[Anime Tosho – Unexpected Uses for the Galois Field Affine Transformation Instruction]
-- #link("https://www.youtube.com/watch?v=tD5NrevFtbU")[Casey Muratori – “Clean” Code, Horrible Performance]
