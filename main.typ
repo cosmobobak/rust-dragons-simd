@@ -394,16 +394,26 @@ _A million chess positions solved per second._
 
 ---
 
-Here is an activation function used in the best chess engines:
 
-$ "SCReLU"(x) = "clamp"(x, 0, 1)^2 "       “Squared Clipped ReLU”" $
+#grid(
+  columns: (1fr, 1fr),
+  column-gutter: 3em,
+  align: top,
+  [
+    Here is an activation function used in the best chess engines:
 
----
-
-#figure(
-  image("assets/screlu.png", width: 100%),
-  numbering: none,
-) <screlu>
+    $
+      "SCReLU"(x) = "clamp"(x, 0, 1)^2 \
+      "“Squared Clipped ReLU”"
+    $
+  ],
+  [
+    #figure(
+      image("assets/screlu.png", width: 90%),
+      numbering: none,
+    ) <screlu>
+  ],
+)
 
 ---
 
@@ -958,15 +968,36 @@ _Know thy data!_
 
 The compiler has much more hope of autovectorising if you accept `&[T]`, instead of `T`.
 
-```rust
-// GOOD
-frobnicate_batch(walruses)
+#grid(
+  columns: (1fr, 1fr),
+  column-gutter: 3em,
+  align: top,
+  [
+    ```rust
+    // GOOD
+    fn frobnicate_batch(xs: &[Walrus]) {
+      for x in xs { x.tusk *= 2; }
+    }
 
-// BAD
-for walrus in walruses {
-  frobnicate(walrus)
-}
-```
+
+    frobnicate_batch(walruses);
+    ```
+  ],
+  [
+    ```rust
+    // BAD
+    fn frobnicate(x: &Walrus) {
+      x.tusk *= 2;
+    }
+
+    for walrus in walruses {
+      frobnicate(walrus);
+    }
+    ```
+  ],
+)
+
+#linebreak()
 
 Corollary: *Organise your data into batches!*
 
