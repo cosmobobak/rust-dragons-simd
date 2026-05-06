@@ -90,7 +90,7 @@ This is distinguished from:
 
 == What do people mean when they say “SIMD”?
 
-Colloquially, #smallcaps[simd] refers specifically to a class of CPU instructions
+Colloquially, #smallcaps[simd] refers specifically to a class of CPU instruction
 that operate on #smallcaps[vectors] – small, fixed-size arrays composed of
 #smallcaps[lanes].
 
