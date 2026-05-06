@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg {
+        fill: #fafafa;
+      }
+      .line {
+        stroke: #23373b;
+        stroke-width: 2.0;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+      .arrow {
+        stroke: #23373b;
+        stroke-width: 2.0;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+      .text-label {
+        font-family: 'Berkeley Mono', 'TX-02', 'EB Garamond', sans-serif;
+        font-size: 30px;
+        fill: #23373b;
+        dominant-baseline: middle;
+      }
+      .text-value {
+        font-family: 'Berkeley Mono', 'TX-02', 'EB Garamond', sans-serif;
+        font-size: 20px;
+        fill: #23373b;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+      .text-op {
+        font-family: 'Berkeley Mono', 'TX-02', 'EB Garamond', sans-serif;
+        font-size: 24px;
+        fill: #23373b;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+    </style>
+  </defs>
+
+  <rect class="bg" width="100%" height="100%" />
+
+  <text class="text-label" x="120" y="60" text-anchor="end">a</text>
+
+  <rect class="line" x="150" y="40" width="512" height="40" />
+  <path class="line" d="
+    M214 40 v40 M278 40 v40 M342 40 v40
+    M406 40 v40 M470 40 v40 M534 40 v40 M598 40 v40
+  " />
+
+  <text class="text-value" x="182" y="60">5</text>
+  <text class="text-value" x="246" y="60">-2</text>
+  <text class="text-value" x="310" y="60">8</text>
+  <text class="text-value" x="374" y="60">3</text>
+  <text class="text-value" x="438" y="60">10</text>
+  <text class="text-value" x="502" y="60">-4</text>
+  <text class="text-value" x="566" y="60">6</text>
+  <text class="text-value" x="630" y="60">7</text>
+
+  <text class="text-label" x="680" y="60" text-anchor="start">i16×8</text>
+
+  <g class="text-op">
+    <text x="182" y="100">×</text>
+    <text x="246" y="100">×</text>
+    <text x="310" y="100">×</text>
+    <text x="374" y="100">×</text>
+    <text x="438" y="100">×</text>
+    <text x="502" y="100">×</text>
+    <text x="566" y="100">×</text>
+    <text x="630" y="100">×</text>
+  </g>
+
+  <text class="text-label" x="120" y="140" text-anchor="end">b</text>
+
+  <rect class="line" x="150" y="120" width="512" height="40" />
+  <path class="line" d="
+    M214 120 v40 M278 120 v40 M342 120 v40
+    M406 120 v40 M470 120 v40 M534 120 v40 M598 120 v40
+  " />
+
+  <text class="text-value" x="182" y="140">6</text>
+  <text class="text-value" x="246" y="140">3</text>
+  <text class="text-value" x="310" y="140">2</text>
+  <text class="text-value" x="374" y="140">4</text>
+  <text class="text-value" x="438" y="140">5</text>
+  <text class="text-value" x="502" y="140">5</text>
+  <text class="text-value" x="566" y="140">8</text>
+  <text class="text-value" x="630" y="140">1</text>
+
+  <text class="text-label" x="680" y="140" text-anchor="start">i16×8</text>
+
+  <path class="arrow" d="
+    M182 170 L214 192
+    M246 170 L214 192
+    M310 170 L342 192
+    M374 170 L342 192
+    M438 170 L470 192
+    M502 170 L470 192
+    M566 170 L598 192
+    M630 170 L598 192
+  " />
+
+  <g class="text-op">
+    <text x="214" y="178">+</text>
+    <text x="342" y="178">+</text>
+    <text x="470" y="178">+</text>
+    <text x="598" y="178">+</text>
+  </g>
+
+  <text class="text-label" x="120" y="220" text-anchor="end">out</text>
+
+  <rect class="line" x="150" y="200" width="512" height="40" />
+  <path class="line" d="
+    M278 200 v40 M406 200 v40 M534 200 v40
+  " />
+
+  <text class="text-value" x="214" y="220">24</text>
+  <text class="text-value" x="342" y="220">28</text>
+  <text class="text-value" x="470" y="220">30</text>
+  <text class="text-value" x="598" y="220">55</text>
+
+  <text class="text-label" x="680" y="220" text-anchor="start">i32×4</text>
+
+</svg>

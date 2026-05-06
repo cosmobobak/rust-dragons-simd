@@ -15,7 +15,7 @@
     title: [Introduction to SIMD in Rust],
     subtitle: [Using more of your hardware for fun & profit],
     author: [Cosmo Bobak],
-    date: datetime(year: 2026, month: 04, day: 22),
+    date: datetime(year: 2026, month: 05, day: 06),
     // institution: [Esri],
     // contact: [cosmobobak\@gmail.com],
     // logo: emoji.city,
@@ -34,7 +34,7 @@
 #show link: it => {
   if type(it.dest) == str {
     let space = if measure(it.body).height > 20pt {
-      -7pt
+      -6pt
     } else {
       0pt
     }
@@ -407,8 +407,10 @@ Given some #smallcaps[value of unity], $Q$, chosen to represent 1,
 
 $ "fixed-point-multiply"(a, b) = (a dot b) / Q $
 
-$ "e.g." space space space & 3.14 × 0.77 = 2.4178 \
- approx & 314 × 77 space \/ space 100 = 241  $
+$
+  "e.g." space space space & 3.14 × 0.77 = 2.4178 \
+            arrow.squiggly & 314 × 77 space \/ space 100 = 241
+$
 
 - Operations are *associative*.
 - Values can be smaller in memory, like `i16` or `i8`.
@@ -444,16 +446,59 @@ Lucky fact: $ 255 × 127 <= 2^15 $
 Thus:
 
 $
-  & "clamp"(x_1, 0, 1)^2 × w_1 \
-  =& "clamp"(x_1, 0, 1) × "clamp"(x_1, 0, 1) × w_1 \
-  =& underbrace("clamp"(x_1, 0, 1) × w_1, "cannot overflow i16") × "clamp"(x_1, 0, 1)
+    & "clamp"(x_1, 0, 1)^2 × w_1 \
+  = & "clamp"(x_1, 0, 1) × "clamp"(x_1, 0, 1) × w_1 \
+  = & underbrace("clamp"(x_1, 0, 1) × w_1, "cannot overflow i16") × "clamp"(x_1, 0, 1)
 $
 
 ---
 
-TODO: mullo and madd intel manual entries
+== Pairwise multiply-then-add
+
+#grid(
+  columns: (1fr, 1fr),
+  column-gutter: 3em,
+  align: top,
+  [
+    #text(size: 40pt)[
+      → #link("https://www.felixcloutier.com/x86/pmullw")[
+        P·MUL·LW
+      ]]
+    #linebreak()
+    _Multiply Packed Signed Integers
+    #linebreak()
+    and Store Low Result_
+
+    Performs a SIMD multiply of the packed 16-bit integers in the destination and the source, and stores the *low 16 bits* of each intermediate 32-bit result in the destination.
+  ],
+  [
+    #text(size: 40pt)[
+      → #link("https://www.felixcloutier.com/x86/pmaddwd")[
+        P·MADD·WD
+      ]]
+    #linebreak()
+    _Multiply and Add Packed Integers_
+
+    Multiplies the individual signed words of the destination by the corresponding signed words of the source, producing temporary signed double-word results. The results are then *summed* and stored in the destination.
+  ],
+)
+
+#align(right)[— Intel® 64 and IA-32 Architectures Software Developer’s Manual]
 
 ---
+
+#text(size: 40pt)[P·MADD·WD]
+#linebreak()
+_Multiply and Add Packed Integers_
+
+#figure(
+  image("assets/simd-madd.svg", width: 80%),
+  numbering: none,
+) <madd>
+
+---
+
+A more sophisticated implementation of the activate-and-weight operation might look like this:
 
 ```rust
 // inputs  : [i16; LAYER_SIZE]
@@ -462,10 +507,12 @@ const Q: i16 = 255;
 for (input, weight) in inputs.iter().zip(weights) {      // chunks of 32
   let activated = input.clamp(0, Q);
   let mullo     = _mm512_mullo_epi16(activated, weight); // i16, by the lemma
-  let weighted  = _mm512_madd_epi16(activated, mullo);   // i32
+  let weighted  = _mm512_madd_epi16(activated, mullo);   // → i32
   // do something with `weighted`.
 }
 ```
+
+Success! – we have performed the entire activate-and-weight operation in `i16`!
 
 = Parsing JSON at incredible speed
 _We are thus motivated to make JSON parsing as fast as possible._
@@ -680,12 +727,7 @@ fn find_structural_characters(json: &str, bitmask: &mut [u64]) {
   ],
 )
 
-#align(
-  right,
-)[
-  — Intel® 64 and IA-32 Architectures Software Developer’s Manual
-  #footnote()[Quotes edited for clarity & concision.
-  ]]
+#align(right)[— Intel® 64 and IA-32 Architectures Software Developer’s Manual]
 
 ---
 
@@ -788,6 +830,23 @@ Problem: You must mirror not just *bytes*, but the *bits within each byte*.
   ]
 ]
 
+---
+
+Naïvely, we might implement this by reversing the bits in each byte one at a time:
+
+```rust
+fn bit_reverse(x: [u8; 64]) -> [u8; 64] {
+  let mut result = [0; 64];
+  for (i, byte) in x.iter().enumerate() {
+    for j in 0..8 {
+      // within each byte, reverse the bits
+      result[i] |= ((*byte >> j) & 1) << (7 - j);
+    }
+  }
+  result
+}
+```
+
 == Vector-matrix multiplication refresher
 
 Multiplying a vector by an anti-diagonal matrix _reverses_ it.
@@ -845,13 +904,13 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
       #pause
 
       ```rust
-      fn bit_reverse(x: [u8; 64]) -> [u8; 64] {
+      fn bit_reverse(x : [u8; 64]) -> [u8; 64] {
           let m = _mm512_set1_epi64(ANTI_DIAG);
           _mm512_gf2p8affine_epi64_epi8(x, m, 0)
       }
       ```
 
-      #h(1fr) ↓ #h(2fr)
+      #h(2fr) ↓ #h(3fr)
 
       ```asm
       vgf2p8affineqb zmm0, zmm0,
@@ -868,20 +927,66 @@ Multiplying a vector by an anti-diagonal matrix _reverses_ it.
 ]
 
 = Advice for the working programmer
-_Please make your data more boring._
+_Know thy data!_
+
+== Operate _uniformly_ on batches of data
+
+The compiler has much more hope of autovectorising if you accept `&[T]`, instead of `T`.
+
+```rust
+// GOOD
+frobnicate_batch(walruses)
+
+// BAD
+for walrus in walruses {
+  frobnicate(walrus)
+}
+```
+
+Corollary: *Organise your data into batches!*
 
 ---
 
-- general coding style (operate on batches)
-- → cite casey, matklad.
+Simpler, deterministic operations on each _element_ of a batch are easier to vectorise.
 
-// A slide with equation:
+```rust
+// GOOD
+if condition {
+  for walrus in walruses { walrus.frobnicate() }
+} else {
+  for walrus in walruses { walrus.transmogrify() }
+}
 
-// $ x_(n+1) = (x_n + a/x_n) / 2 $
+// BAD
+for walrus in walruses {
+  if condition {
+    walrus.frobnicate()
+  } else {
+    walrus.transmogrify()
+  }
+}
+```
 
-// #focus-slide[
-//   Wake up!
-// ]
+== Avoid indirection
+
+In order to vectorise, the compiler needs to be able to tell what’s going to happen.
+
+- Avoid #smallcaps[virtual dispatch] (`dyn Trait` in Rust).
+#pause
+- Use flat data structures.
+#pause
+- Avoid calling out to external functions in hot code, especially when inlining is likely to fail.
+
+== Understand what your program is doing
+
+1. Use a profiler to find bottlenecks.
+#pause
+2. Take the time to inspect the generated assembly in hot functions.
+#pause
+3. More important than anything else: *Have a mental model of the data you are operating on.*
+  1. How big is it?
+  2. How is it laid out in memory?
+  3. What are the operations you want to perform on it?
 
 #show: appendix
 
@@ -889,10 +994,18 @@ _Please make your data more boring._
 
 ---
 
-
-// Thoughts
-// Slides 9 and 10 are great - not too much to read and your voiceover is to explain the content is excellent
-// When showing instructions, consider highlighting them as you mention them?
-// Or add an extra diagram showing it operating on the numbers?
-// Slide 17 - consider add an exmaple number to demonstrate the clamping and squaring
-// Note: we can see you cursor but it's small
+- #link("https://matklad.github.io/2023/11/15/push-ifs-up-and-fors-down.html")[Matklad – Push ifs up and fors down]
+- #link(
+    "https://www.infoq.com/presentations/moore-law-expiring/",
+  )[Cantrill – No Moore Left to Give: Enterprise Computing after Moore's Law]
+- #link("https://www.felixcloutier.com/x86/")[Felix Cloutier’s x86 reference]
+- #link(
+    "https://arxiv.org/abs/1902.08318",
+  )[Langdale & Lemire (2019) – Parsing Gigabytes of JSON per Second]
+- #link(
+    "https://doc.rust-lang.org/std/primitive.f32.html#method.to_int_unchecked",
+  )[Rust’s `to_int_unchecked` documentation]
+- #link(
+    "https://gist.github.com/animetosho/d3ca95da2131b5813e16b5bb1b137ca0",
+  )[Anime Tosho – Unexpected Uses for the Galois Field Affine Transformation Instruction]
+- #link("https://www.youtube.com/watch?v=tD5NrevFtbU")[Casey Muratori – “Clean” Code, Horrible Performance]
