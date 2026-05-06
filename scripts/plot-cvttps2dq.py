@@ -26,7 +26,7 @@ data_desktop = {
     "CVTTPS2DQ": 20.57 * 10**9,
 }
 
-COLOURS = ["#5b69e4", "#f33b73"]
+COLOURS = ["#4b68c6", "#d73848"]
 
 # ax.bar(
 #     ["Naïve", "CVTTPS2DQ"],
@@ -34,6 +34,10 @@ COLOURS = ["#5b69e4", "#f33b73"]
 #     width=0.5,
 #     facecolor=COLOURS,
 # )
+
+def fmt(value):
+    return f"{value / 1e9:.2f}×10⁹"
+
 
 for i, (label, value) in enumerate(data_laptop.items()):
     ax.bar(
@@ -43,6 +47,14 @@ for i, (label, value) in enumerate(data_laptop.items()):
         facecolor=COLOURS[0],
         label="Intel® Core™ i7-13850HX" if i == 0 else None,
     )
+    ax.text(
+        i - 0.2,
+        value,
+        fmt(value),
+        ha="center",
+        va="bottom",
+        fontsize=12,
+    )
 
 for i, (label, value) in enumerate(data_desktop.items()):
     ax.bar(
@@ -51,6 +63,14 @@ for i, (label, value) in enumerate(data_desktop.items()):
         width=0.375,
         facecolor=COLOURS[1],
         label="AMD Ryzen™ 9 9950X" if i == 0 else None,
+    )
+    ax.text(
+        i + 0.2,
+        value,
+        fmt(value),
+        ha="center",
+        va="bottom",
+        fontsize=12,
     )
 
 ax.legend(loc="upper left", fontsize=12)

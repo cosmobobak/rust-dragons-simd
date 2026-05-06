@@ -466,9 +466,11 @@ Problem: Multiplications are occurring in `i32`.
 Observation 1: Neural networks are trained with #smallcaps[weight clipping] –
 bounding $w in [-127, 127]$.
 
-Observation 2: SCReLU’s $"clamp"$ operation bounds the activation $a in [0, 255]$.
+Observation 2: SCReLU’s $"clamp"$ operation bounds the activation $ sqrt(a) in [0, 255]$.
 
-Lucky fact: $ 255 × 127 <= 2^15 $
+Lucky#footnote[Deliberately engineered] fact: $ 255 × 127 <= 2^15 $
+
+#pause
 
 Thus:
 

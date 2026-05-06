@@ -16,7 +16,7 @@ plt.rcParams["font.size"] = 16
 
 fig, ax = plt.subplots(figsize=(8, 5.5))
 
-COLOURS = ["#5b69e4", "#f33b73"]
+COLOURS = ["#4b68c6", "#d73848"]
 
 # data_laptop = {
 #     "Naïve": 1.14 * 10**9,
@@ -52,6 +52,14 @@ for i, (label, value) in enumerate(data_desktop.items()):
         # facecolor=COLOURS[1],
         facecolor=COLOURS[i],
         label="Desktop" if i == 0 else None,
+    )
+    ax.text(
+        i,
+        value,
+        f"{value / 1e9:.2f} GB/s",
+        ha="center",
+        va="bottom",
+        fontsize=14,
     )
 
 # ax.legend(loc="upper left", fontsize=12)
