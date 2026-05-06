@@ -974,12 +974,13 @@ In order to vectorise, the compiler needs to be able to tell what’s going to h
 - Avoid #smallcaps[virtual dispatch] (`dyn Trait` in Rust).
 #pause
 - Use flat data structures.
+  - `[u64; 1024]` is the best type ever, `Box<dyn TreeNode>` is the worst.
 #pause
 - Avoid calling out to external functions in hot code, especially when inlining is likely to fail.
 
 == Understand what your program is doing
 
-1. Use a profiler to find bottlenecks.
+1. Use a profiler.
 #pause
 2. Take the time to inspect the generated assembly in hot functions.
 #pause
