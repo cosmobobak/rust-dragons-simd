@@ -466,7 +466,7 @@ Problem: Multiplications are occurring in `i32`.
 Observation 1: Neural networks are trained with #smallcaps[weight clipping] –
 bounding $w in [-127, 127]$.
 
-Observation 2: SCReLU’s $"clamp"$ operation bounds the activation $ sqrt(a) in [0, 255]$.
+Observation 2: SCReLU’s $"clamp"$ operation bounds the activation $sqrt(a) in [0, 255]$.
 
 Lucky#footnote[Deliberately engineered] fact: $ 255 × 127 <= 2^15 $
 
@@ -828,7 +828,10 @@ _Galois Field Affine Transformation_
 #quote(attribution: link(
   "https://gist.github.com/animetosho/d3ca95da2131b5813e16b5bb1b137ca0",
 )[Anime Tosho, Unexpected Uses for the Galois Field Affine Transformation Instruction])[
-  I suspect GFNI was aimed at accelerating SM4 encryption, however, one of the instructions can be used for many other purposes. […] of particular interest here is the Affine Transformation (GF2P8AFFINEQB), aka bit-matrix multiply, instruction.
+  I suspect GFNI was aimed at accelerating SM4 encryption, however,
+  one of the instructions can be used for many other purposes. […] of
+  particular interest here is the Affine Transformation (GF2P8AFFINEQB),
+  aka bit-matrix multiply, instruction.
 ]
 
 ---
