@@ -26,7 +26,7 @@
 )
 
 #set text(font: "EB Garamond", weight: "light", size: 20pt)
-#show raw: set text(font: ("Berkeley Mono", "TX-02"))
+#show raw: set text(font: "TX-02", weight: "regular")
 
 #set strong(delta: 175)
 #set par(justify: true)
